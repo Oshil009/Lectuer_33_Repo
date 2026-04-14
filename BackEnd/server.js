@@ -1,22 +1,35 @@
 const express = require("express");
-const https=require("https");
-const fs=require("fs");
 const app = express();
 require("dotenv").config();
+
 require("./models/db");
+
 app.use(express.json());
-const roleRouter=require('./routers/RoleRouter');
-const userRouter=require('./routers/userRoutes');
-const categoryRouter=require('./routers/categoryRouter');
+
+const roleRouter = require('./routers/RoleRouter');
+const userRouter = require('./routers/userRoutes');
+const categoryRouter = require('./routers/categoryRouter');
 const productRouter = require('./routers/productRoutes');
-app.use('/role',roleRouter);
-app.use('/user',userRouter);
-app.use('/category',categoryRouter);
+const orderRouter = require('./routers/orderRoutes');
+const cartRouter = require('./routers/cartRouter');
+const reviewRouter = require('./routers/reviewRouter');
+
+app.use('/role', roleRouter);
+app.use('/user', userRouter);
+app.use('/category', categoryRouter);
 app.use('/products', productRouter);
-const sslOptions={
-  key:fs.readFileSync(process.env.SSL_KEY_PATH),
-  cert:fs.readFileSync(process.env.SSL_CERT_PATH)
-}
-https.createServer(sslOptions,app).listen(process.env.PORT, () => {
-  console.log(`Secure server running at https://localhost:${process.env.PORT}`);
+app.use('/order', orderRouter);
+app.use('/cart', cartRouter);
+app.use('/review', reviewRouter);
+
+app.use((err, req, res, next) => {
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error"
+  });
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Secure server running at http://localhost:${PORT}`);
 });

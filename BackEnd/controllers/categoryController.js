@@ -1,50 +1,28 @@
 const categoryModel = require('../models/category');
-const { populate } = require('../models/Role');
-const { all } = require('../routers/RoleRouter');
 
 const getAllCategories = async (req, res) => {
     try {
-        const allCategories = await categoryModel.find({}).populate({path: 'createdBy',select: '-password',  populate: {path: 'role' }});
+        const allCategories = await categoryModel.find({}).populate({ path: 'createdBy', select: '-password', populate: { path: 'role' } });
         if (allCategories.length === 0) {
-            return res.status(200).json({
-                success: true,
-                message: "No categories found in the database",
-                data: []
-            });
+            return res.status(200).json({ success: true, message: "No categories found in the database", data: [] });
         }
-        res.status(200).json({
-            success: true,
-            message: "All categories fetched successfully",
-            data: allCategories
-        });
+        res.status(200).json({ success: true, message: "All categories fetched successfully", data: allCategories });
     } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Server Error",
-            error: err.message
-        });
+        res.status(500).json({ success: false, message: "Server Error", error: err.message });
     }
-}
+};
+
 const createCategory = async (req, res) => {
-    const { title, description, imageUrl, id } = req.body;
+    const { title, description, imageUrl } = req.body;
     try {
-        const newCategory = new categoryModel({
-            title, description, imageUrl, createdBy: id
-        })
+        const newCategory = new categoryModel({ title, description, imageUrl, createdBy: req.user.id });
         const savedCategory = await newCategory.save();
-        res.status(201).json({
-            success: true,
-            message: "The Category has been created",
-            data: savedCategory
-        });
+        res.status(201).json({ success: true, message: "The Category has been created", data: savedCategory });
     } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Server Error",
-            error: err.message
-        });
+        res.status(500).json({ success: false, message: "Server Error", error: err.message });
     }
-}
+};
+
 const updateCategory = async (req, res) => {
     const { id } = req.params;
     try {
@@ -52,21 +30,15 @@ const updateCategory = async (req, res) => {
         if (!category) {
             return res.status(404).json({ success: false, message: "Category not found" });
         }
-        Object.assign(category, req.body);
+        const { createdBy, ...safeBody } = req.body;
+        Object.assign(category, safeBody);
         await category.save();
-        res.status(200).json({
-            success: true,
-            message: "Category updated successfully",
-            data: category
-        });
+        res.status(200).json({ success: true, message: "Category updated successfully", data: category });
     } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Server Error",
-            error: err.message
-        });
+        res.status(500).json({ success: false, message: "Server Error", error: err.message });
     }
-}
+};
+
 const deleteCategory = async (req, res) => {
     const { id } = req.params;
     try {
@@ -76,11 +48,8 @@ const deleteCategory = async (req, res) => {
         }
         res.status(200).json({ success: true, message: "Category deleted successfully" });
     } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Server Error",
-            error: err.message
-        });
+        res.status(500).json({ success: false, message: "Server Error", error: err.message });
     }
-}
-module.exports = { getAllCategories, createCategory, updateCategory, deleteCategory }
+};
+
+module.exports = { getAllCategories, createCategory, updateCategory, deleteCategory };
