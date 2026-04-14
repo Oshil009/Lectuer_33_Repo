@@ -7,8 +7,12 @@ require("./models/db");
 app.use(express.json());
 const roleRouter=require('./routers/RoleRouter');
 const userRouter=require('./routers/userRoutes');
+const categoryRouter=require('./routers/categoryRouter');
+const productRouter = require('./routers/productRoutes');
 app.use('/role',roleRouter);
 app.use('/user',userRouter);
+app.use('/category',categoryRouter);
+app.use('/products', productRouter);
 const sslOptions={
   key:fs.readFileSync(process.env.SSL_KEY_PATH),
   cert:fs.readFileSync(process.env.SSL_CERT_PATH)
