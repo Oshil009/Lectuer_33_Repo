@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
 require("dotenv").config();
-
 require("./models/db");
 
 app.use(express.json());
@@ -31,5 +30,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Secure server running at http://localhost:${PORT}`);
+  console.log(`application listening at http://localhost:${PORT}`);
 });
