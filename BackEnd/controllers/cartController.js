@@ -22,7 +22,8 @@ const addToCart = async (req, res) => {
             });
         }
 
-        res.status(200).json({ success: true, data: cart });
+        const populated = await cartModel.findById(cart._id).populate('items.productId');
+        res.status(200).json({ success: true, data: populated });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -31,8 +32,7 @@ const addToCart = async (req, res) => {
 const getCart = async (req, res) => {
     try {
         const cart = await cartModel.findOne({ userId: req.user.id }).populate('items.productId');
-        if (!cart) return res.status(404).json({ success: false, message: "Cart not found" });
-
+        if (!cart) return res.status(200).json({ success: true, data: { items: [] } });
         res.status(200).json({ success: true, data: cart });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -50,10 +50,23 @@ const removeFromCart = async (req, res) => {
             { new: true }
         ).populate('items.productId');
 
-        res.status(200).json({ success: true, message: "Product removed", data: cart });
+        res.status(200).json({ success: true, message: 'Product removed', data: cart });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 };
 
-module.exports = { addToCart, getCart, removeFromCart };
+const clearCart = async (req, res) => {
+    try {
+        const cart = await cartModel.findOneAndUpdate(
+            { userId: req.user.id },
+            { $set: { items: [] } },
+            { new: true }
+        );
+        res.status(200).json({ success: true, message: 'Cart cleared', data: cart });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+module.exports = { addToCart, getCart, removeFromCart, clearCart };
