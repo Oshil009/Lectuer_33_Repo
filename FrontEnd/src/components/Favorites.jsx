@@ -1,8 +1,8 @@
-import { useGetProfileQuery } from '../services/userApiSlice'
-import { useToggleFavoriteMutation } from '../services/userApiSlice'
+import { useGetProfileQuery, useToggleFavoriteMutation } from '../services/userApiSlice'
 import { useAddToCartMutation } from '../services/cartApiSlice'
 import { useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
+import { toast, confirm } from '../utils/swal'
 
 export default function Favorites() {
     const navigate = useNavigate()
@@ -10,92 +10,133 @@ export default function Favorites() {
     const [toggleFavorite] = useToggleFavoriteMutation()
     const [addToCart] = useAddToCartMutation()
 
-    if (isLoading) return <p style={{ textAlign: 'center', marginTop: 40 }}>Loading favorites...</p>
+    if (isLoading) return (
+        <div className="state-center">
+            <div className="state-center__inner">
+                <svg className="animate-spin" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <circle cx="14" cy="14" r="11" stroke="rgba(233,69,96,0.2)" strokeWidth="3" />
+                    <path d="M14 3a11 11 0 0111 11" stroke="#e94560" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+                <p className="state-center__text">Loading favorites...</p>
+            </div>
+        </div>
+    )
 
-    const favorites = profileData?.data?.favorites || []
+    const favorites = (profileData?.data?.favorites || []).filter(p => typeof p === 'object')
 
-    const handleRemove = async (e, productId) => {
+    const handleRemove = async (e, productId, name) => {
         e.stopPropagation()
-        try {
-            await toggleFavorite(productId).unwrap()
-            refetch()
-        } catch (err) {
-            alert(err.data?.message || 'Failed to remove')
-        }
+        const result = await confirm(`Remove "${name}" from favorites?`, '', 'Remove')
+        if (!result.isConfirmed) return
+        try { await toggleFavorite(productId).unwrap(); refetch(); toast('Removed from favorites', 'info') }
+        catch (err) { toast(err.data?.message || 'Failed', 'error') }
     }
 
     const handleAddToCart = async (e, productId) => {
         e.stopPropagation()
-        try {
-            await addToCart({ productId, quantity: 1 }).unwrap()
-            alert('Added to cart!')
-        } catch (err) {
-            alert(err.data?.message || 'Failed to add to cart')
-        }
+        try { await addToCart({ productId, quantity: 1 }).unwrap(); toast('Added to cart!') }
+        catch (err) { toast(err.data?.message || 'Failed to add to cart', 'error') }
     }
 
     return (
         <>
             <Helmet>
-                <title>My Favorites ShopNow</title>
+                <title>My Favorites — ShopNow</title>
                 <meta name="description" content="View and manage your favorite products on ShopNow." />
             </Helmet>
-            <div style={{ maxWidth: 900, margin: '40px auto', padding: 24 }}>
-                <h2>My Favorites</h2>
 
-                {favorites.length === 0 ? (
-                    <div style={{ textAlign: 'center', marginTop: 60 }}>
-                        <p style={{ color: '#888', fontSize: 16 }}>You haven't saved any favorites yet.</p>
-                        <button onClick={() => navigate('/')} style={{ padding: '10px 24px', marginTop: 16, cursor: 'pointer', borderRadius: 6 }}>
-                            Browse Products
-                        </button>
+            <div className="page">
+                <div className="page-inner" style={{ maxWidth: 960 }}>
+
+                    <div className="home-header">
+                        <div>
+                            <h1 className="home-title">My Favorites</h1>
+                            {favorites.length > 0 && (
+                                <p className="home-count">{favorites.length} saved item{favorites.length !== 1 ? 's' : ''}</p>
+                            )}
+                        </div>
                     </div>
-                ) : (
-                    <>
-                        <p style={{ color: '#888', marginBottom: 20 }}>{favorites.length} saved item{favorites.length !== 1 ? 's' : ''}</p>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}>
-                            {favorites.map(product => {
-                                if (typeof product === 'string') return null
-                                return (
-                                    <div
-                                        key={product._id}
-                                        onClick={() => navigate(`/products/${product._id}`)}
-                                        style={{ border: '1px solid #e0e0e0', borderRadius: 10, padding: 16, cursor: 'pointer', background: '#fff', position: 'relative' }}
-                                        onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'}
-                                        onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
-                                    >
-                                        <button
-                                            onClick={(e) => handleRemove(e, product._id)}
-                                            title="Remove from favorites"
-                                            style={{ position: 'absolute', top: 10, right: 10, background: '#ffe4e4', border: '1px solid #e74c3c', borderRadius: '50%', width: 30, height: 30, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
-                                            ❤️
-                                        </button>
 
+                    {favorites.length === 0 ? (
+                        <div className="card card--xl empty-state">
+                            <div className="empty-state__icon-wrap bg-[var(--brand-light)]">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 21S4 15 4 9a5 5 0 0110 0 5 5 0 0110 0c0 6-8 12-8 12z"
+                                        stroke="#e94560" strokeWidth="1.5" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                            <p className="empty-state__title">No favorites saved yet</p>
+                            <p className="empty-state__text">Browse products and tap the heart to save them here</p>
+                            <button onClick={() => navigate('/')} className="btn btn--primary">Browse Products</button>
+                        </div>
+                    ) : (
+                        <div className="product-grid">
+                            {favorites.map(product => (
+                                <article
+                                    key={product._id}
+                                    onClick={() => navigate(`/products/${product.slug || product._id}`)}
+                                    className="product-card relative">
+
+                                    <button
+                                        onClick={e => handleRemove(e, product._id, product.name)}
+                                        title="Remove from favorites"
+                                        className="fav-remove-btn">
+                                        <svg width="13" height="13" viewBox="0 0 13 13" fill="#e94560">
+                                            <path d="M6.5 11S1.5 7.5 1.5 4.5a2.5 2.5 0 015-1 2.5 2.5 0 015 1C11.5 7.5 6.5 11 6.5 11z" />
+                                        </svg>
+                                    </button>
+
+                                    <div className="product-card__img-wrap">
                                         {product.imagesUrl?.[0] ? (
                                             <img src={product.imagesUrl[0]} alt={product.name}
-                                                style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 6, marginBottom: 10 }} />
+                                                loading="lazy" className="product-card__img" />
                                         ) : (
-                                            <div style={{ width: '100%', height: 160, background: '#f0f0f0', borderRadius: 6, marginBottom: 10 }} />
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                                                    <rect x="2" y="8" width="28" height="16" rx="2.5" stroke="#d1d5db" strokeWidth="1.3" />
+                                                    <circle cx="12" cy="14" r="2.5" stroke="#d1d5db" strokeWidth="1.3" />
+                                                    <path d="M2 21l8-5 5 3.5 5-4 10 6" stroke="#d1d5db" strokeWidth="1.3" strokeLinejoin="round" />
+                                                </svg>
+                                            </div>
                                         )}
-
-                                        <h4 style={{ textTransform: 'capitalize', margin: '0 0 4px', fontSize: 14, paddingRight: 24 }}>{product.name}</h4>
-                                        <p style={{ margin: '0 0 4px', fontSize: 12, color: '#888' }}>{product.categoryId?.title}</p>
-                                        <p style={{ fontWeight: 'bold', fontSize: 17, margin: '0 0 8px' }}>${product.price}</p>
-                                        <p style={{ color: product.stock > 0 ? 'green' : 'red', fontSize: 12, margin: '0 0 10px' }}>
-                                            {product.stock > 0 ? `In stock (${product.stock})` : 'Out of stock'}
-                                        </p>
-                                        <button
-                                            onClick={(e) => handleAddToCart(e, product._id)}
-                                            disabled={product.stock === 0}
-                                            style={{ width: '100%', padding: 8, background: product.stock === 0 ? '#ccc' : '#1a1a2e', color: '#fff', border: 'none', borderRadius: 6, cursor: product.stock === 0 ? 'not-allowed' : 'pointer', fontSize: 13 }}>
-                                            Add to Cart
-                                        </button>
                                     </div>
-                                )
-                            })}
+
+                                    {product.categoryId?.title && (
+                                        <span className="product-card__category">{product.categoryId.title}</span>
+                                    )}
+
+                                    <h4 className="product-card__name pr-7">{product.name}</h4>
+
+                                    <div className="flex items-center justify-between mb-3">
+                                        <p className="product-card__price">${product.price}</p>
+                                        <div className="flex items-center gap-1">
+                                            <span className="product-card__stock-dot"
+                                                style={{ background: product.stock > 0 ? '#22c55e' : 'var(--brand)' }} />
+                                            <span className="product-card__stock-text"
+                                                style={{ color: product.stock > 0 ? '#15803d' : '#b91c1c' }}>
+                                                {product.stock > 0 ? `${product.stock} left` : 'Out of stock'}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={e => handleAddToCart(e, product._id)}
+                                        disabled={product.stock === 0}
+                                        aria-label={`Add ${product.name} to cart`}
+                                        className={`btn w-full py-2 text-sm tracking-wide flex items-center justify-center gap-1.5 rounded-[var(--radius-sm)] border-none ${product.stock === 0 ? 'bg-[var(--bg-muted)] text-[var(--text-hint)] cursor-not-allowed' : 'bg-[var(--brand)] text-white cursor-pointer'}`}>
+                                        <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
+                                            <path d="M1 1h2.5l1.6 7.4a1 1 0 00.98.8h5.84a1 1 0 00.97-.76L13.5 5H4"
+                                                stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                                            <circle cx="5.5" cy="12.5" r="1" fill="currentColor" />
+                                            <circle cx="11.5" cy="12.5" r="1" fill="currentColor" />
+                                        </svg>
+                                        {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                                    </button>
+                                </article>
+                            ))}
                         </div>
-                    </>
-                )}
+                    )}
+                </div>
             </div>
         </>
     )

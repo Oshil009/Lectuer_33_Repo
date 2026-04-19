@@ -5,32 +5,157 @@ import { useGetAllProductsQuery, useCreateProductMutation, useUpdateProductMutat
 import { useGetAllOrdersQuery, useUpdateOrderStatusMutation } from '../services/orderApiSlice'
 import { useGetAllRolesQuery, useCreateRoleMutation } from '../services/roleApiSlice'
 import { Helmet } from 'react-helmet-async'
+import { toast, confirm } from '../utils/swal'
 
-const TABS = ['Users', 'Categories', 'Products', 'Orders', 'Roles']
+const TABS = ['Products', 'Orders', 'Categories', 'Users', 'Roles']
+
+const STATUS = {
+    pending:    { bg: '#fef9ec', color: '#92400e', border: '#fde68a', dot: '#f59e0b' },
+    processing: { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe', dot: '#3b82f6' },
+    shipped:    { bg: '#f5f3ff', color: '#5b21b6', border: '#ddd6fe', dot: '#8b5cf6' },
+    delivered:  { bg: '#f0fdf4', color: '#14532d', border: '#bbf7d0', dot: '#22c55e' },
+    cancelled:  { bg: '#fef2f2', color: '#7f1d1d', border: '#fecaca', dot: '#e94560' },
+}
+
+function TabLoader() {
+    return (
+        <div className="flex items-center justify-center py-16">
+            <div className="state-center__inner">
+                <svg className="animate-spin" width="24" height="24" viewBox="0 0 28 28" fill="none">
+                    <circle cx="14" cy="14" r="11" stroke="rgba(233,69,96,0.2)" strokeWidth="3" />
+                    <path d="M14 3a11 11 0 0111 11" stroke="#e94560" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+                <p className="state-center__text">Loading...</p>
+            </div>
+        </div>
+    )
+}
+
+function BtnPrimary({ children, disabled, onClick, type = 'button' }) {
+    return (
+        <button type={type} disabled={disabled} onClick={onClick}
+            className="btn btn--primary flex items-center gap-1.5"
+            style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}>
+            {children}
+        </button>
+    )
+}
+
+function BtnSecondary({ children, onClick, type = 'button' }) {
+    return (
+        <button type={type} onClick={onClick} className="btn btn--secondary">{children}</button>
+    )
+}
+
+function BtnEdit({ onClick }) {
+    return (
+        <button onClick={onClick} className="btn--ghost-edit">
+            <svg width="11" height="11" viewBox="0 0 13 13" fill="none">
+                <path d="M9 2l2 2-7 7H2V9l7-7z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Edit
+        </button>
+    )
+}
+
+function BtnDelete({ onClick }) {
+    return (
+        <button onClick={onClick} className="btn--ghost-danger flex items-center gap-1">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                <path d="M1.5 2.5h8M4 2.5V1.5a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v1M2.5 2.5l.5 7h5.5l.5-7"
+                    stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Delete
+        </button>
+    )
+}
+
+function SearchInput({ value, onChange, placeholder }) {
+    return (
+        <div className="relative mb-4">
+            <div className="field-icon">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <circle cx="6" cy="6" r="4.5" stroke="#9ca3af" strokeWidth="1.3" />
+                    <path d="M10 10l2.5 2.5" stroke="#9ca3af" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+            </div>
+            <input type="search" placeholder={placeholder} value={value} onChange={onChange}
+                className="field field--icon-left" />
+        </div>
+    )
+}
+
+function Table({ headers, children }) {
+    return (
+        <div className="admin-table-wrap">
+            <div className="overflow-x-auto">
+                <table className="admin-table">
+                    <thead>
+                        <tr>
+                            {headers.map(h => <th key={h}>{h}</th>)}
+                        </tr>
+                    </thead>
+                    <tbody>{children}</tbody>
+                </table>
+            </div>
+        </div>
+    )
+}
+
+function Td({ children, mono = false }) {
+    return (
+        <td className={mono ? 'font-mono text-xs' : ''}>
+            {children}
+        </td>
+    )
+}
+
+function FormCard({ title, onSubmit, children }) {
+    return (
+        <div className="card p-5 mb-5">
+            <h3 className="text-sm font-semibold mt-0 mb-4 text-[var(--text-primary)]">{title}</h3>
+            <form onSubmit={onSubmit}>{children}</form>
+        </div>
+    )
+}
 
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState('Products')
 
     return (
         <>
-            <Helmet>
-                <title>Admin Dashboard ShopNow</title>
-            </Helmet>
-            <div style={{ maxWidth: 1060, margin: '30px auto', padding: 24 }}>
-                <h2>Admin Dashboard</h2>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
-                    {TABS.map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab)}
-                            style={{ padding: '9px 22px', cursor: 'pointer', background: activeTab === tab ? '#1a1a2e' : '#f0f0f0', color: activeTab === tab ? '#fff' : '#333', border: 'none', borderRadius: 6, fontWeight: activeTab === tab ? 'bold' : 'normal' }}>
-                            {tab}
-                        </button>
-                    ))}
+            <Helmet><title>Admin Dashboard — ShopNow</title></Helmet>
+            <div className="page">
+                <div className="page-inner admin-page">
+
+                    <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="admin-star-icon">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M7 1l1.8 3.6L13 5.3l-3 2.9.7 4.1L7 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.7z"
+                                        stroke="#e94560" strokeWidth="1.2" strokeLinejoin="round" />
+                                </svg>
+                            </span>
+                            <h1 className="home-title">Admin Dashboard</h1>
+                        </div>
+                        <p className="home-count">Manage your store</p>
+                    </div>
+
+                    <div className="tab-bar card mb-6 flex w-fit">
+                        {TABS.map(tab => (
+                            <button key={tab} onClick={() => setActiveTab(tab)}
+                                className={`tab-btn ${activeTab === tab ? 'tab-btn--active' : ''}`}>
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+
+                    {activeTab === 'Products'   && <ProductsTab />}
+                    {activeTab === 'Orders'     && <OrdersTab />}
+                    {activeTab === 'Categories' && <CategoriesTab />}
+                    {activeTab === 'Users'      && <UsersTab />}
+                    {activeTab === 'Roles'      && <RolesTab />}
                 </div>
-                {activeTab === 'Users' && <UsersTab />}
-                {activeTab === 'Categories' && <CategoriesTab />}
-                {activeTab === 'Products' && <ProductsTab />}
-                {activeTab === 'Orders' && <OrdersTab />}
-                {activeTab === 'Roles' && <RolesTab />}
             </div>
         </>
     )
@@ -39,38 +164,40 @@ export default function AdminDashboard() {
 function UsersTab() {
     const { data, isLoading } = useGetAllUsersQuery()
     const [deleteUser] = useDeleteUserMutation()
-    if (isLoading) return <p>Loading users...</p>
+
+    const handleDelete = async (id, name) => {
+        const result = await confirm(`Delete user "${name}"?`, 'This cannot be undone.', 'Delete')
+        if (!result.isConfirmed) return
+        try { await deleteUser(id).unwrap(); toast('User deleted', 'info') }
+        catch (err) { toast(err.data?.message || 'Failed', 'error') }
+    }
+
+    if (isLoading) return <TabLoader />
     const users = data?.data || []
+
     return (
         <div>
-            <h3>All Users ({users.length})</h3>
-            <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 500 }}>
-                    <thead>
-                        <tr style={{ background: '#f0f0f0' }}>
-                            {['Name', 'Email', 'Role', 'Joined', 'Action'].map(h => (
-                                <th key={h} style={{ padding: '10px 12px', textAlign: 'left', border: '1px solid #ddd' }}>{h}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map(u => (
-                            <tr key={u._id}>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>{u.name}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>{u.email}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd', textTransform: 'capitalize' }}>{u.role?.role || '—'}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>{new Date(u.createdAt).toLocaleDateString()}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>
-                                    <button onClick={async () => { if (window.confirm('Delete user?')) await deleteUser(u._id) }}
-                                        style={{ background: '#e74c3c', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: 4, cursor: 'pointer' }}>
-                                        Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <p className="text-sm mb-4 text-[var(--text-hint)]">{users.length} registered users</p>
+            <Table headers={['User', 'Email', 'Role', 'Joined', 'Action']}>
+                {users.map(u => (
+                    <tr key={u._id}>
+                        <Td>
+                            <div className="flex items-center gap-2">
+                                <div className="admin-user-avatar">{u.name?.[0]?.toUpperCase()}</div>
+                                <span className="font-medium text-[var(--text-primary)]">{u.name}</span>
+                            </div>
+                        </Td>
+                        <Td><span className="text-[var(--text-muted)]">{u.email}</span></Td>
+                        <Td>
+                            <span className={u.role?.role === 'admin' ? 'user-role-badge--admin' : 'user-role-badge--user'}>
+                                {u.role?.role || 'user'}
+                            </span>
+                        </Td>
+                        <Td><span className="text-[var(--text-hint)]">{new Date(u.createdAt).toLocaleDateString()}</span></Td>
+                        <Td><BtnDelete onClick={() => handleDelete(u._id, u.name)} /></Td>
+                    </tr>
+                ))}
+            </Table>
         </div>
     )
 }
@@ -82,73 +209,67 @@ function CategoriesTab() {
     const [deleteCategory] = useDeleteCategoryMutation()
     const [form, setForm] = useState({ title: '', description: '', imageUrl: '' })
     const [editId, setEditId] = useState(null)
-    const [error, setError] = useState('')
 
     const handleSubmit = async (e) => {
-        e.preventDefault(); setError('')
+        e.preventDefault()
         try {
-            if (editId) {
-                await updateCategory({ id: editId, ...form }).unwrap()
-                setEditId(null)
-            } else {
-                await createCategory(form).unwrap()
-            }
+            if (editId) { await updateCategory({ id: editId, ...form }).unwrap(); setEditId(null); toast('Category updated!') }
+            else { await createCategory(form).unwrap(); toast('Category created!') }
             setForm({ title: '', description: '', imageUrl: '' })
-        } catch (err) { setError(err.data?.message || 'Failed') }
+        } catch (err) { toast(err.data?.message || 'Failed', 'error') }
     }
 
-    const startEdit = (cat) => {
-        setEditId(cat._id)
-        setForm({ title: cat.title, description: cat.description || '', imageUrl: cat.imageUrl || '' })
+    const handleDelete = async (id, title) => {
+        const result = await confirm(`Delete category "${title}"?`, '', 'Delete')
+        if (!result.isConfirmed) return
+        try { await deleteCategory(id).unwrap(); toast('Category deleted', 'info') }
+        catch (err) { toast(err.data?.message || 'Failed', 'error') }
     }
 
-    if (isLoading) return <p>Loading categories...</p>
+    if (isLoading) return <TabLoader />
     const categories = data?.data || []
 
     return (
         <div>
-            <h3>Categories ({categories.length})</h3>
-            <form onSubmit={handleSubmit} style={{ background: '#f9f9f9', padding: 16, borderRadius: 8, marginBottom: 24 }}>
-                <h4 style={{ marginTop: 0 }}>{editId ? 'Edit Category' : 'Add New Category'}</h4>
-                <input placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required
-                    style={{ display: 'block', width: '100%', marginBottom: 10, padding: 8, boxSizing: 'border-box', borderRadius: 4, border: '1px solid #ddd' }} />
-                <input placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required
-                    style={{ display: 'block', width: '100%', marginBottom: 10, padding: 8, boxSizing: 'border-box', borderRadius: 4, border: '1px solid #ddd' }} />
-                <input placeholder="Image URL" value={form.imageUrl} onChange={e => setForm({ ...form, imageUrl: e.target.value })}
-                    style={{ display: 'block', width: '100%', marginBottom: 10, padding: 8, boxSizing: 'border-box', borderRadius: 4, border: '1px solid #ddd' }} />
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <button type="submit" disabled={isCreating} style={{ padding: '8px 20px', cursor: 'pointer', borderRadius: 4 }}>
-                        {editId ? 'Update' : 'Create'}
-                    </button>
-                    {editId && <button type="button" onClick={() => { setEditId(null); setForm({ title: '', description: '', imageUrl: '' }) }}
-                        style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: 4 }}>Cancel</button>}
+            <FormCard title={editId ? 'Edit Category' : 'Add Category'} onSubmit={handleSubmit}>
+                <div className="flex flex-col gap-3 mb-4">
+                    {[
+                        { key: 'title', placeholder: 'Title', required: true },
+                        { key: 'description', placeholder: 'Description', required: true },
+                        { key: 'imageUrl', placeholder: 'Image URL (optional)', required: false },
+                    ].map(({ key, placeholder, required }) => (
+                        <input key={key} placeholder={placeholder} value={form[key]}
+                            onChange={e => setForm({ ...form, [key]: e.target.value })}
+                            required={required} className="field" />
+                    ))}
                 </div>
-            </form>
-            <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr style={{ background: '#f0f0f0' }}>
-                            {['Title', 'Description', 'Actions'].map(h => (
-                                <th key={h} style={{ padding: '10px 12px', textAlign: 'left', border: '1px solid #ddd' }}>{h}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {categories.map(cat => (
-                            <tr key={cat._id}>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>{cat.title}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>{cat.description}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>
-                                    <button onClick={() => startEdit(cat)} style={{ background: '#3498db', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', marginRight: 6 }}>Edit</button>
-                                    <button onClick={async () => { if (window.confirm('Delete category?')) await deleteCategory(cat._id) }}
-                                        style={{ background: '#e74c3c', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 4, cursor: 'pointer' }}>Delete</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                <div className="flex gap-2.5">
+                    <BtnPrimary type="submit" disabled={isCreating}>
+                        {isCreating ? 'Saving...' : editId ? 'Update Category' : 'Create Category'}
+                    </BtnPrimary>
+                    {editId && (
+                        <BtnSecondary onClick={() => { setEditId(null); setForm({ title: '', description: '', imageUrl: '' }) }}>
+                            Cancel
+                        </BtnSecondary>
+                    )}
+                </div>
+            </FormCard>
+
+            <p className="text-sm mb-3 text-[var(--text-hint)]">{categories.length} categories</p>
+            <Table headers={['Title', 'Description', 'Actions']}>
+                {categories.map(cat => (
+                    <tr key={cat._id}>
+                        <Td><span className="font-medium text-[var(--text-primary)]">{cat.title}</span></Td>
+                        <Td><span className="text-[var(--text-muted)]">{cat.description}</span></Td>
+                        <Td>
+                            <div className="flex items-center gap-2">
+                                <BtnEdit onClick={() => { setEditId(cat._id); setForm({ title: cat.title, description: cat.description || '', imageUrl: cat.imageUrl || '' }) }} />
+                                <BtnDelete onClick={() => handleDelete(cat._id, cat.title)} />
+                            </div>
+                        </Td>
+                    </tr>
+                ))}
+            </Table>
         </div>
     )
 }
@@ -159,87 +280,122 @@ function ProductsTab() {
     const [createProduct, { isLoading: isCreating }] = useCreateProductMutation()
     const [updateProduct] = useUpdateProductMutation()
     const [deleteProduct] = useDeleteProductMutation()
-
     const emptyForm = { name: '', description: '', price: '', stock: '', categoryId: '', imagesUrl: '' }
     const [form, setForm] = useState(emptyForm)
     const [editId, setEditId] = useState(null)
-    const [error, setError] = useState('')
     const [search, setSearch] = useState('')
 
     const handleSubmit = async (e) => {
-        e.preventDefault(); setError('')
-        const payload = { ...form, price: Number(form.price), stock: Number(form.stock), imagesUrl: form.imagesUrl.split(',').map(u => u.trim()).filter(Boolean) }
+        e.preventDefault()
+        const payload = {
+            ...form,
+            price: Number(form.price),
+            stock: Number(form.stock),
+            imagesUrl: form.imagesUrl.split(',').map(u => u.trim()).filter(Boolean)
+        }
         try {
-            if (editId) { await updateProduct({ id: editId, ...payload }).unwrap(); setEditId(null) }
-            else { await createProduct(payload).unwrap() }
+            if (editId) { await updateProduct({ id: editId, ...payload }).unwrap(); setEditId(null); toast('Product updated!') }
+            else { await createProduct(payload).unwrap(); toast('Product created!') }
             setForm(emptyForm)
-        } catch (err) { setError(err.data?.message || 'Failed') }
+        } catch (err) { toast(err.data?.message || 'Failed', 'error') }
+    }
+
+    const handleDelete = async (id, name) => {
+        const result = await confirm(`Delete "${name}"?`, 'This cannot be undone.', 'Delete')
+        if (!result.isConfirmed) return
+        try { await deleteProduct(id).unwrap(); toast('Product deleted', 'info') }
+        catch (err) { toast(err.data?.message || 'Failed', 'error') }
     }
 
     const startEdit = (p) => {
         setEditId(p._id)
         setForm({ name: p.name, description: p.description || '', price: p.price, stock: p.stock, categoryId: p.categoryId?._id || '', imagesUrl: p.imagesUrl?.join(', ') || '' })
+        window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
-    if (isLoading) return <p>Loading products...</p>
-    const products = productsData?.data || []
+    if (isLoading) return <TabLoader />
+    const products   = productsData?.data || []
     const categories = categoriesData?.data || []
-    const filtered = search ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase())) : products
+    const filtered   = search ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase())) : products
 
     return (
         <div>
-            <h3>Products ({products.length})</h3>
-            <form onSubmit={handleSubmit} style={{ background: '#f9f9f9', padding: 16, borderRadius: 8, marginBottom: 24 }}>
-                <h4 style={{ marginTop: 0 }}>{editId ? 'Edit Product' : 'Add New Product'}</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-                    <input placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
-                    <input placeholder="Price" type="number" min="0" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
-                    <input placeholder="Stock" type="number" min="0" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} required style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
-                    <select value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} required style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }}>
-                        <option value="">Select Category</option>
-                        {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.title}</option>)}
-                    </select>
+            <FormCard title={editId ? 'Edit Product' : 'Add Product'} onSubmit={handleSubmit}>
+                <div className="grid grid-cols-2 gap-2.5 mb-2.5">
+                    {[
+                        { key: 'name',  placeholder: 'Product name', type: 'text' },
+                        { key: 'price', placeholder: 'Price',        type: 'number', min: '0', step: '0.01' },
+                        { key: 'stock', placeholder: 'Stock quantity', type: 'number', min: '0' },
+                    ].map(({ key, placeholder, type, ...rest }) => (
+                        <input key={key} placeholder={placeholder} type={type} value={form[key]}
+                            onChange={e => setForm({ ...form, [key]: e.target.value })}
+                            required className="field" {...rest} />
+                    ))}
+                    <div className="relative">
+                        <select value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })}
+                            required className="field appearance-none pr-8">
+                            <option value="">Select Category</option>
+                            {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.title}</option>)}
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <svg width="10" height="10" viewBox="0 0 11 11" fill="none">
+                                <path d="M2 4l3.5 3.5L9 4" stroke="#9ca3af" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </div>
+                    </div>
                 </div>
-                <textarea placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required
-                    style={{ display: 'block', width: '100%', padding: 8, minHeight: 60, marginBottom: 10, boxSizing: 'border-box', borderRadius: 4, border: '1px solid #ddd' }} />
-                <input placeholder="Image URLs (comma separated)" value={form.imagesUrl} onChange={e => setForm({ ...form, imagesUrl: e.target.value })}
-                    style={{ display: 'block', width: '100%', padding: 8, marginBottom: 10, boxSizing: 'border-box', borderRadius: 4, border: '1px solid #ddd' }} />
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <button type="submit" disabled={isCreating} style={{ padding: '8px 20px', cursor: 'pointer', borderRadius: 4 }}>{editId ? 'Update' : 'Create'}</button>
-                    {editId && <button type="button" onClick={() => { setEditId(null); setForm(emptyForm) }} style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: 4 }}>Cancel</button>}
+                <textarea placeholder="Description" value={form.description}
+                    onChange={e => setForm({ ...form, description: e.target.value })}
+                    required rows={3} className="field resize-none mb-2.5" />
+                <input placeholder="Image URLs (comma separated)" value={form.imagesUrl}
+                    onChange={e => setForm({ ...form, imagesUrl: e.target.value })}
+                    className="field mb-4" />
+                <div className="flex gap-2.5">
+                    <BtnPrimary type="submit" disabled={isCreating}>
+                        {isCreating ? 'Saving...' : editId ? 'Update Product' : 'Create Product'}
+                    </BtnPrimary>
+                    {editId && <BtnSecondary onClick={() => { setEditId(null); setForm(emptyForm) }}>Cancel</BtnSecondary>}
                 </div>
-            </form>
+            </FormCard>
 
-            <input placeholder=" Search products..." value={search} onChange={e => setSearch(e.target.value)}
-                style={{ padding: '8px 14px', marginBottom: 14, borderRadius: 6, border: '1px solid #ddd', width: '100%', boxSizing: 'border-box' }} />
+            <p className="text-sm m-0 mb-3 text-[var(--text-hint)]">
+                {filtered.length} of {products.length} products
+            </p>
 
-            <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
-                    <thead>
-                        <tr style={{ background: '#f0f0f0' }}>
-                            {['Name', 'Price', 'Stock', 'Category', 'Actions'].map(h => (
-                                <th key={h} style={{ padding: '10px 12px', textAlign: 'left', border: '1px solid #ddd' }}>{h}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtered.map(p => (
-                            <tr key={p._id}>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd', textTransform: 'capitalize' }}>{p.name}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>${p.price}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>{p.stock}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>{p.categoryId?.title || '—'}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>
-                                    <button onClick={() => startEdit(p)} style={{ background: '#3498db', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', marginRight: 6 }}>Edit</button>
-                                    <button onClick={async () => { if (window.confirm('Delete product?')) await deleteProduct(p._id) }}
-                                        style={{ background: '#e74c3c', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 4, cursor: 'pointer' }}>Delete</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <SearchInput value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..." />
+
+            <Table headers={['Product', 'Slug', 'Price', 'Stock', 'Category', 'Actions']}>
+                {filtered.map(p => (
+                    <tr key={p._id}>
+                        <Td>
+                            <div className="flex items-center gap-2">
+                                {p.imagesUrl?.[0] ? (
+                                    <img src={p.imagesUrl[0]} alt={p.name} className="admin-product-thumb" />
+                                ) : (
+                                    <div className="admin-product-thumb-placeholder">
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                            <rect x="1" y="3" width="12" height="8" rx="1.5" stroke="#d1d5db" strokeWidth="1.1" />
+                                        </svg>
+                                    </div>
+                                )}
+                                <span className="capitalize font-medium text-[var(--text-primary)]">{p.name}</span>
+                            </div>
+                        </Td>
+                        <Td mono>{p.slug}</Td>
+                        <Td><span className="font-semibold text-[var(--brand)]">${p.price}</span></Td>
+                        <Td>
+                            <span className={p.stock > 0 ? 'stock-badge--in' : 'stock-badge--out'}>{p.stock}</span>
+                        </Td>
+                        <Td><span className="text-[var(--text-muted)]">{p.categoryId?.title || '—'}</span></Td>
+                        <Td>
+                            <div className="flex items-center gap-2">
+                                <BtnEdit onClick={() => startEdit(p)} />
+                                <BtnDelete onClick={() => handleDelete(p._id, p.name)} />
+                            </div>
+                        </Td>
+                    </tr>
+                ))}
+            </Table>
         </div>
     )
 }
@@ -248,50 +404,74 @@ function OrdersTab() {
     const { data, isLoading } = useGetAllOrdersQuery()
     const [updateOrderStatus] = useUpdateOrderStatusMutation()
     const [search, setSearch] = useState('')
-    const STATUS_COLORS = { pending: '#f39c12', processing: '#3498db', shipped: '#9b59b6', delivered: '#27ae60', cancelled: '#e74c3c' }
     const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
 
-    if (isLoading) return <p>Loading orders...</p>
+    const handleStatusChange = async (id, status) => {
+        try { await updateOrderStatus({ id, status }).unwrap(); toast(`Status updated to "${status}"`, 'success') }
+        catch (err) { toast(err.data?.message || 'Failed', 'error') }
+    }
+
+    if (isLoading) return <TabLoader />
     const orders = data?.data || []
-    const filtered = search ? orders.filter(o => o.user?.name?.toLowerCase().includes(search.toLowerCase()) || o._id.includes(search)) : orders
+    const filtered = search
+        ? orders.filter(o => o.user?.name?.toLowerCase().includes(search.toLowerCase()) || o._id.includes(search))
+        : orders
 
     return (
         <div>
-            <h3>All Orders ({orders.length})</h3>
-            <input placeholder=" Search by customer or order ID..." value={search} onChange={e => setSearch(e.target.value)}
-                style={{ padding: '8px 14px', marginBottom: 14, borderRadius: 6, border: '1px solid #ddd', width: '100%', boxSizing: 'border-box' }} />
-            <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
-                    <thead>
-                        <tr style={{ background: '#f0f0f0' }}>
-                            {['Order ID', 'Customer', 'Total', 'Date', 'Status', 'Update Status'].map(h => (
-                                <th key={h} style={{ padding: '10px 12px', textAlign: 'left', border: '1px solid #ddd' }}>{h}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtered.map(order => (
-                            <tr key={order._id}>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd', fontSize: 12, fontFamily: 'monospace' }}>{order._id.slice(-8).toUpperCase()}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>{order.user?.name || '—'}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd', fontWeight: 'bold' }}>${order.totalPrice?.toFixed(2)}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd', fontSize: 13 }}>{new Date(order.createdAt).toLocaleDateString()}</td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>
-                                    <span style={{ background: STATUS_COLORS[order.status] || '#888', color: '#fff', padding: '3px 10px', borderRadius: 12, fontSize: 12, textTransform: 'capitalize' }}>
-                                        {order.status}
-                                    </span>
-                                </td>
-                                <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>
-                                    <select value={order.status} onChange={e => updateOrderStatus({ id: order._id, status: e.target.value })}
-                                        style={{ padding: '5px 8px', borderRadius: 4, border: '1px solid #ddd' }}>
+            <p className="text-sm mb-3 text-[var(--text-hint)]">{orders.length} total orders</p>
+            <SearchInput value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by customer or order ID..." />
+
+            <Table headers={['Order ID', 'Customer', 'Total', 'Date', 'Status', 'Update']}>
+                {filtered.map(order => {
+                    const s = STATUS[order.status] || { bg: '#f3f4f6', color: '#374151', border: '#e5e7eb', dot: '#9ca3af' }
+                    return (
+                        <tr key={order._id}>
+                            <Td mono>
+                                <span className="font-bold text-[var(--text-primary)]">
+                                    #{order._id.slice(-8).toUpperCase()}
+                                </span>
+                            </Td>
+                            <Td>
+                                <div className="flex items-center gap-2">
+                                    <div className="admin-user-avatar w-6 h-6 text-[9px]">
+                                        {order.user?.name?.[0]?.toUpperCase() ?? '?'}
+                                    </div>
+                                    <span className="text-[var(--text-primary)]">{order.user?.name || '—'}</span>
+                                </div>
+                            </Td>
+                            <Td>
+                                <span className="font-bold text-[var(--brand)]">
+                                    ${order.totalPrice?.toFixed(2)}
+                                </span>
+                            </Td>
+                            <Td>
+                                <span className="text-[var(--text-hint)]">{new Date(order.createdAt).toLocaleDateString()}</span>
+                            </Td>
+                            <Td>
+                                <span className="status-badge"
+                                    style={{ background: s.bg, color: s.color, borderColor: s.border }}>
+                                    <span className="status-badge__dot" style={{ background: s.dot }} />
+                                    {order.status}
+                                </span>
+                            </Td>
+                            <Td>
+                                <div className="relative">
+                                    <select value={order.status} onChange={e => handleStatusChange(order._id, e.target.value)}
+                                        className="field appearance-none cursor-pointer text-xs py-1.5 pl-2.5 pr-6">
                                         {statuses.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                        <svg width="9" height="9" viewBox="0 0 11 11" fill="none">
+                                            <path d="M2 4l3.5 3.5L9 4" stroke="#9ca3af" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </Td>
+                        </tr>
+                    )
+                })}
+            </Table>
         </div>
     )
 }
@@ -300,41 +480,58 @@ function RolesTab() {
     const { data, isLoading } = useGetAllRolesQuery()
     const [createRole, { isLoading: isCreating }] = useCreateRoleMutation()
     const [form, setForm] = useState({ role: '', permissions: '' })
-    const [error, setError] = useState('')
 
     const handleCreate = async (e) => {
-        e.preventDefault(); setError('')
+        e.preventDefault()
         try {
-            await createRole({ role: form.role, permissions: form.permissions.split(',').map(p => p.trim()).filter(Boolean) }).unwrap()
+            await createRole({
+                role: form.role,
+                permissions: form.permissions.split(',').map(p => p.trim()).filter(Boolean)
+            }).unwrap()
             setForm({ role: '', permissions: '' })
-        } catch (err) { setError(err.data?.message || 'Failed') }
+            toast('Role created!')
+        } catch (err) { toast(err.data?.message || 'Failed', 'error') }
     }
 
-    if (isLoading) return <p>Loading roles...</p>
+    if (isLoading) return <TabLoader />
     const roles = data?.data || []
 
     return (
         <div>
-            <h3>Roles ({roles.length})</h3>
-            <form onSubmit={handleCreate} style={{ background: '#f9f9f9', padding: 16, borderRadius: 8, marginBottom: 24 }}>
-                <h4 style={{ marginTop: 0 }}>Add New Role</h4>
-                <input placeholder="Role name (e.g. moderator)" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} required
-                    style={{ display: 'block', width: '100%', marginBottom: 10, padding: 8, boxSizing: 'border-box', borderRadius: 4, border: '1px solid #ddd' }} />
-                <input placeholder="Permissions (comma separated)" value={form.permissions} onChange={e => setForm({ ...form, permissions: e.target.value })}
-                    style={{ display: 'block', width: '100%', marginBottom: 10, padding: 8, boxSizing: 'border-box', borderRadius: 4, border: '1px solid #ddd' }} />
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                <button type="submit" disabled={isCreating} style={{ padding: '8px 20px', cursor: 'pointer', borderRadius: 4 }}>
-                    {isCreating ? 'Creating...' : 'Create Role'}
-                </button>
-            </form>
-            {roles.map(role => (
-                <div key={role._id} style={{ border: '1px solid #ddd', borderRadius: 6, padding: 16, marginBottom: 12 }}>
-                    <strong style={{ textTransform: 'capitalize' }}>{role.role}</strong>
-                    <p style={{ margin: '6px 0 0', color: '#666', fontSize: 14 }}>
-                        Permissions: {role.permissions.length > 0 ? role.permissions.join(', ') : 'none'}
-                    </p>
+            <FormCard title="Add Role" onSubmit={handleCreate}>
+                <div className="flex flex-col gap-3 mb-4">
+                    <input placeholder="Role name (e.g. moderator)" value={form.role}
+                        onChange={e => setForm({ ...form, role: e.target.value })}
+                        required className="field" />
+                    <input placeholder="Permissions (comma separated)" value={form.permissions}
+                        onChange={e => setForm({ ...form, permissions: e.target.value })}
+                        className="field" />
                 </div>
-            ))}
+                <BtnPrimary type="submit" disabled={isCreating}>
+                    {isCreating ? 'Creating...' : 'Create Role'}
+                </BtnPrimary>
+            </FormCard>
+
+            <p className="text-sm mb-3 text-[var(--text-hint)]">{roles.length} roles</p>
+            <div className="flex flex-col gap-3">
+                {roles.map(role => (
+                    <div key={role._id} className="card admin-role-card">
+                        <div>
+                            <p className="text-sm font-bold capitalize m-0 mb-1.5 text-[var(--text-primary)]">
+                                {role.role}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {role.permissions.length > 0 ? role.permissions.map(perm => (
+                                    <span key={perm} className="perm-badge">{perm}</span>
+                                )) : (
+                                    <span className="text-xs text-[var(--text-hint)]">No permissions</span>
+                                )}
+                            </div>
+                        </div>
+                        <span className="role-badge">Role</span>
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }
