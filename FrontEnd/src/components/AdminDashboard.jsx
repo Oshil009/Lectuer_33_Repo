@@ -91,9 +91,7 @@ function Table({ headers, children }) {
             <div className="overflow-x-auto">
                 <table className="admin-table">
                     <thead>
-                        <tr>
-                            {headers.map(h => <th key={h}>{h}</th>)}
-                        </tr>
+                        <tr>{headers.map(h => <th key={h}>{h}</th>)}</tr>
                     </thead>
                     <tbody>{children}</tbody>
                 </table>
@@ -103,11 +101,7 @@ function Table({ headers, children }) {
 }
 
 function Td({ children, mono = false }) {
-    return (
-        <td className={mono ? 'font-mono text-xs' : ''}>
-            {children}
-        </td>
-    )
+    return <td className={mono ? 'font-mono text-xs' : ''}>{children}</td>
 }
 
 function FormCard({ title, onSubmit, children }) {
@@ -115,6 +109,172 @@ function FormCard({ title, onSubmit, children }) {
         <div className="card p-5 mb-5">
             <h3 className="text-sm font-semibold mt-0 mb-4 text-[var(--text-primary)]">{title}</h3>
             <form onSubmit={onSubmit}>{children}</form>
+        </div>
+    )
+}
+
+function ImagePreview({ imagesUrl, onChange }) {
+    const urls = imagesUrl.split(',').map(u => u.trim()).filter(Boolean)
+
+    const removeUrl = (i) => {
+        const next = [...urls]
+        next.splice(i, 1)
+        onChange(next.join(', '))
+    }
+
+    return (
+        <div className="mb-4">
+            <input
+                placeholder="Image URLs (comma separated)"
+                value={imagesUrl}
+                onChange={e => onChange(e.target.value)}
+                className="field"
+            />
+            {urls.length > 0 && (
+                <div className="img-preview-wrap">
+                    {urls.map((url, i) => (
+                        <div key={i} className="img-preview-item">
+                            <img
+                                src={url}
+                                alt={`Preview ${i + 1}`}
+                                className="img-preview-thumb"
+                                onError={e => {
+                                    e.target.style.display = 'none'
+                                    e.target.nextSibling.style.display = 'flex'
+                                }}
+                            />
+                            <div className="img-preview-error" style={{ display: 'none' }}>
+                                <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+                                    <rect x="1" y="3" width="12" height="8" rx="1.5" stroke="#d1d5db" strokeWidth="1.1" />
+                                    <path d="M1 9l3-3 2.5 2 2.5-2 3 3" stroke="#d1d5db" strokeWidth="1" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                            <button type="button" className="img-preview-remove" onClick={() => removeUrl(i)}>
+                                <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                                    <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                </svg>
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+function OrderDetailModal({ order, onClose, onStatusChange, statuses }) {
+    const s = STATUS[order.status] || { bg: '#f3f4f6', color: '#374151', border: '#e5e7eb', dot: '#9ca3af' }
+
+    return (
+        <div className="order-modal-backdrop" onClick={onClose}>
+            <div className="order-modal" onClick={e => e.stopPropagation()}>
+
+                <div className="order-modal__header">
+                    <div>
+                        <p className="order-modal__id">#{order._id.slice(-8).toUpperCase()}</p>
+                        <p className="order-modal__date">
+                            {new Date(order.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric', month: 'long', day: 'numeric'
+                            })}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="status-badge" style={{ background: s.bg, color: s.color, borderColor: s.border }}>
+                            <span className="status-badge__dot" style={{ background: s.dot }} />
+                            {order.status}
+                        </span>
+                        <button onClick={onClose} className="order-modal__close">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div className="order-modal__body">
+
+                    <div className="order-modal__section">
+                        <p className="order-modal__section-label">Customer</p>
+                        <div className="flex items-center gap-2">
+                            <div className="admin-user-avatar">{order.user?.name?.[0]?.toUpperCase() ?? '?'}</div>
+                            <div>
+                                <p className="order-modal__customer-name">{order.user?.name || '—'}</p>
+                                {order.user?.email && (
+                                    <p className="order-modal__customer-email">{order.user.email}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="order-modal__section">
+                        <p className="order-modal__section-label">Shipping address</p>
+                        <p className="order-modal__address">
+                            {order.shippingAddress?.street}, {order.shippingAddress?.city}
+                            {order.shippingAddress?.phone && (
+                                <span className="order-modal__phone"> · {order.shippingAddress.phone}</span>
+                            )}
+                        </p>
+                    </div>
+
+                    <div className="order-modal__section">
+                        <p className="order-modal__section-label">Items ({order.items?.length})</p>
+                        <div className="order-modal__items">
+                            {order.items?.map(item => (
+                                <div key={item._id} className="order-modal__item">
+                                    <div className="order-thumb">
+                                        {item.productId?.imagesUrl?.[0] ? (
+                                            <img src={item.productId.imagesUrl[0]} alt={item.productId?.name}
+                                                className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                                    <rect x="1" y="5" width="16" height="10" rx="1.5" stroke="#d1d5db" strokeWidth="1.2" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="order-modal__item-name">
+                                            {item.productId?.name || 'Product deleted'}
+                                        </p>
+                                        <p className="order-modal__item-meta">
+                                            {item.quantity} × ${item.price}
+                                        </p>
+                                    </div>
+                                    <p className="order-modal__item-total">
+                                        ${(item.quantity * item.price).toFixed(2)}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="order-modal__footer">
+                        <div className="order-modal__total-row">
+                            <span className="order-modal__total-label">Total</span>
+                            <span className="order-modal__total-value">${order.totalPrice?.toFixed(2)}</span>
+                        </div>
+                        <div className="order-modal__status-update">
+                            <p className="order-modal__section-label" style={{ margin: 0 }}>Update status</p>
+                            <div className="relative">
+                                <select
+                                    value={order.status}
+                                    onChange={e => onStatusChange(order._id, e.target.value)}
+                                    className="field appearance-none cursor-pointer text-sm pr-8"
+                                >
+                                    {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <svg width="10" height="10" viewBox="0 0 11 11" fill="none">
+                                        <path d="M2 4l3.5 3.5L9 4" stroke="#9ca3af" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
     )
 }
@@ -234,9 +394,9 @@ function CategoriesTab() {
             <FormCard title={editId ? 'Edit Category' : 'Add Category'} onSubmit={handleSubmit}>
                 <div className="flex flex-col gap-3 mb-4">
                     {[
-                        { key: 'title', placeholder: 'Title', required: true },
-                        { key: 'description', placeholder: 'Description', required: true },
-                        { key: 'imageUrl', placeholder: 'Image URL (optional)', required: false },
+                        { key: 'title',       placeholder: 'Title',                required: true  },
+                        { key: 'description', placeholder: 'Description',           required: true  },
+                        { key: 'imageUrl',    placeholder: 'Image URL (optional)',  required: false },
                     ].map(({ key, placeholder, required }) => (
                         <input key={key} placeholder={placeholder} value={form[key]}
                             onChange={e => setForm({ ...form, [key]: e.target.value })}
@@ -309,7 +469,14 @@ function ProductsTab() {
 
     const startEdit = (p) => {
         setEditId(p._id)
-        setForm({ name: p.name, description: p.description || '', price: p.price, stock: p.stock, categoryId: p.categoryId?._id || '', imagesUrl: p.imagesUrl?.join(', ') || '' })
+        setForm({
+            name: p.name,
+            description: p.description || '',
+            price: p.price,
+            stock: p.stock,
+            categoryId: p.categoryId?._id || '',
+            imagesUrl: p.imagesUrl?.join(', ') || ''
+        })
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
@@ -323,9 +490,9 @@ function ProductsTab() {
             <FormCard title={editId ? 'Edit Product' : 'Add Product'} onSubmit={handleSubmit}>
                 <div className="grid grid-cols-2 gap-2.5 mb-2.5">
                     {[
-                        { key: 'name',  placeholder: 'Product name', type: 'text' },
-                        { key: 'price', placeholder: 'Price',        type: 'number', min: '0', step: '0.01' },
-                        { key: 'stock', placeholder: 'Stock quantity', type: 'number', min: '0' },
+                        { key: 'name',  placeholder: 'Product name',   type: 'text'   },
+                        { key: 'price', placeholder: 'Price',           type: 'number', min: '0', step: '0.01' },
+                        { key: 'stock', placeholder: 'Stock quantity',  type: 'number', min: '0' },
                     ].map(({ key, placeholder, type, ...rest }) => (
                         <input key={key} placeholder={placeholder} type={type} value={form[key]}
                             onChange={e => setForm({ ...form, [key]: e.target.value })}
@@ -347,9 +514,12 @@ function ProductsTab() {
                 <textarea placeholder="Description" value={form.description}
                     onChange={e => setForm({ ...form, description: e.target.value })}
                     required rows={3} className="field resize-none mb-2.5" />
-                <input placeholder="Image URLs (comma separated)" value={form.imagesUrl}
-                    onChange={e => setForm({ ...form, imagesUrl: e.target.value })}
-                    className="field mb-4" />
+
+                <ImagePreview
+                    imagesUrl={form.imagesUrl}
+                    onChange={val => setForm({ ...form, imagesUrl: val })}
+                />
+
                 <div className="flex gap-2.5">
                     <BtnPrimary type="submit" disabled={isCreating}>
                         {isCreating ? 'Saving...' : editId ? 'Update Product' : 'Create Product'}
@@ -399,11 +569,11 @@ function ProductsTab() {
         </div>
     )
 }
-
 function OrdersTab() {
     const { data, isLoading } = useGetAllOrdersQuery()
     const [updateOrderStatus] = useUpdateOrderStatusMutation()
     const [search, setSearch] = useState('')
+    const [selectedOrder, setSelectedOrder] = useState(null)
     const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
 
     const handleStatusChange = async (id, status) => {
@@ -417,8 +587,21 @@ function OrdersTab() {
         ? orders.filter(o => o.user?.name?.toLowerCase().includes(search.toLowerCase()) || o._id.includes(search))
         : orders
 
+    const currentOrder = selectedOrder
+        ? orders.find(o => o._id === selectedOrder._id) || selectedOrder
+        : null
+
     return (
         <div>
+            {currentOrder && (
+                <OrderDetailModal
+                    order={currentOrder}
+                    onClose={() => setSelectedOrder(null)}
+                    onStatusChange={handleStatusChange}
+                    statuses={statuses}
+                />
+            )}
+
             <p className="text-sm mb-3 text-[var(--text-hint)]">{orders.length} total orders</p>
             <SearchInput value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by customer or order ID..." />
 
@@ -426,7 +609,7 @@ function OrdersTab() {
                 {filtered.map(order => {
                     const s = STATUS[order.status] || { bg: '#f3f4f6', color: '#374151', border: '#e5e7eb', dot: '#9ca3af' }
                     return (
-                        <tr key={order._id}>
+                        <tr key={order._id} className="cursor-pointer" onClick={() => setSelectedOrder(order)}>
                             <Td mono>
                                 <span className="font-bold text-[var(--text-primary)]">
                                     #{order._id.slice(-8).toUpperCase()}
@@ -441,22 +624,19 @@ function OrdersTab() {
                                 </div>
                             </Td>
                             <Td>
-                                <span className="font-bold text-[var(--brand)]">
-                                    ${order.totalPrice?.toFixed(2)}
-                                </span>
+                                <span className="font-bold text-[var(--brand)]">${order.totalPrice?.toFixed(2)}</span>
                             </Td>
                             <Td>
                                 <span className="text-[var(--text-hint)]">{new Date(order.createdAt).toLocaleDateString()}</span>
                             </Td>
                             <Td>
-                                <span className="status-badge"
-                                    style={{ background: s.bg, color: s.color, borderColor: s.border }}>
+                                <span className="status-badge" style={{ background: s.bg, color: s.color, borderColor: s.border }}>
                                     <span className="status-badge__dot" style={{ background: s.dot }} />
                                     {order.status}
                                 </span>
                             </Td>
                             <Td>
-                                <div className="relative">
+                                <div className="relative" onClick={e => e.stopPropagation()}>
                                     <select value={order.status} onChange={e => handleStatusChange(order._id, e.target.value)}
                                         className="field appearance-none cursor-pointer text-xs py-1.5 pl-2.5 pr-6">
                                         {statuses.map(s => <option key={s} value={s}>{s}</option>)}
@@ -475,7 +655,6 @@ function OrdersTab() {
         </div>
     )
 }
-
 function RolesTab() {
     const { data, isLoading } = useGetAllRolesQuery()
     const [createRole, { isLoading: isCreating }] = useCreateRoleMutation()

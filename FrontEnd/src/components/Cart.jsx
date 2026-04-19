@@ -6,22 +6,22 @@ import { Helmet } from 'react-helmet-async'
 import { toast, confirm } from '../utils/swal'
 
 const FIELDS = [
-    { key: 'city',   placeholder: 'City',           icon: <path d="M7 2C4.2 2 2 4.2 2 7c0 4 5 9 5 9s5-5 5-9c0-2.8-2.2-5-5-5zm0 6.5A1.5 1.5 0 117 5a1.5 1.5 0 010 3z" stroke="#9ca3af" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" /> },
+    { key: 'city', placeholder: 'City', icon: <path d="M7 2C4.2 2 2 4.2 2 7c0 4 5 9 5 9s5-5 5-9c0-2.8-2.2-5-5-5zm0 6.5A1.5 1.5 0 117 5a1.5 1.5 0 010 3z" stroke="#9ca3af" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" /> },
     { key: 'street', placeholder: 'Street address', icon: <path d="M1 11h12M3 11V5l4-3 4 3v6M5 11V8h4v3" stroke="#9ca3af" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" /> },
-    { key: 'phone',  placeholder: 'Phone number',   icon: <path d="M9.5 1h-5A1.5 1.5 0 003 2.5v9A1.5 1.5 0 004.5 13h5A1.5 1.5 0 0011 11.5v-9A1.5 1.5 0 009.5 1zM7 11.5h.01" stroke="#9ca3af" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" /> },
+    { key: 'phone', placeholder: 'Phone number', icon: <path d="M9.5 1h-5A1.5 1.5 0 003 2.5v9A1.5 1.5 0 004.5 13h5A1.5 1.5 0 0011 11.5v-9A1.5 1.5 0 009.5 1zM7 11.5h.01" stroke="#9ca3af" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" /> },
 ]
 
 export default function Cart() {
     const { data, isLoading, error } = useGetCartQuery()
-    const [removeFromCart]  = useRemoveFromCartMutation()
-    const [addToCart]       = useAddToCartMutation()
-    const [clearCart]       = useClearCartMutation()
+    const [removeFromCart] = useRemoveFromCartMutation()
+    const [addToCart] = useAddToCartMutation()
+    const [clearCart] = useClearCartMutation()
     const [createOrder, { isLoading: isOrdering }] = useCreateOrderMutation()
     const navigate = useNavigate()
 
     const [shippingAddress, setShippingAddress] = useState({ city: '', street: '', phone: '' })
-    const [showCheckout, setShowCheckout]       = useState(false)
-    const [orderError, setOrderError]           = useState('')
+    const [showCheckout, setShowCheckout] = useState(false)
+    const [orderError, setOrderError] = useState('')
 
     if (isLoading) return (
         <div className="state-center">
@@ -49,7 +49,7 @@ export default function Cart() {
         </div>
     )
 
-    const items      = data?.data?.items || []
+    const items = data?.data?.items || []
     const totalPrice = items.reduce((sum, item) => sum + (item.productId?.price || 0) * item.quantity, 0)
 
     const handleRemove = async (productId, name) => {
