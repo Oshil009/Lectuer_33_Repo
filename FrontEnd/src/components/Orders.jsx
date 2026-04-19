@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 
 const STATUS = {
-    pending:    { bg: '#fef9ec', color: '#92400e', border: '#fde68a', dot: '#f59e0b' },
+    pending: { bg: '#fef9ec', color: '#92400e', border: '#fde68a', dot: '#f59e0b' },
     processing: { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe', dot: '#3b82f6' },
-    shipped:    { bg: '#f5f3ff', color: '#5b21b6', border: '#ddd6fe', dot: '#8b5cf6' },
-    delivered:  { bg: '#f0fdf4', color: '#14532d', border: '#bbf7d0', dot: '#22c55e' },
-    cancelled:  { bg: '#fef2f2', color: '#7f1d1d', border: '#fecaca', dot: '#e94560' },
+    shipped: { bg: '#f5f3ff', color: '#5b21b6', border: '#ddd6fe', dot: '#8b5cf6' },
+    delivered: { bg: '#f0fdf4', color: '#14532d', border: '#bbf7d0', dot: '#22c55e' },
+    cancelled: { bg: '#fef2f2', color: '#7f1d1d', border: '#fecaca', dot: '#e94560' },
 }
 
 export default function Orders() {

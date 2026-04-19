@@ -10,11 +10,11 @@ import { toast, confirm } from '../utils/swal'
 const TABS = ['Products', 'Orders', 'Categories', 'Users', 'Roles']
 
 const STATUS = {
-    pending:    { bg: '#fef9ec', color: '#92400e', border: '#fde68a', dot: '#f59e0b' },
+    pending: { bg: '#fef9ec', color: '#92400e', border: '#fde68a', dot: '#f59e0b' },
     processing: { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe', dot: '#3b82f6' },
-    shipped:    { bg: '#f5f3ff', color: '#5b21b6', border: '#ddd6fe', dot: '#8b5cf6' },
-    delivered:  { bg: '#f0fdf4', color: '#14532d', border: '#bbf7d0', dot: '#22c55e' },
-    cancelled:  { bg: '#fef2f2', color: '#7f1d1d', border: '#fecaca', dot: '#e94560' },
+    shipped: { bg: '#f5f3ff', color: '#5b21b6', border: '#ddd6fe', dot: '#8b5cf6' },
+    delivered: { bg: '#f0fdf4', color: '#14532d', border: '#bbf7d0', dot: '#22c55e' },
+    cancelled: { bg: '#fef2f2', color: '#7f1d1d', border: '#fecaca', dot: '#e94560' },
 }
 
 function TabLoader() {
@@ -310,11 +310,11 @@ export default function AdminDashboard() {
                         ))}
                     </div>
 
-                    {activeTab === 'Products'   && <ProductsTab />}
-                    {activeTab === 'Orders'     && <OrdersTab />}
+                    {activeTab === 'Products' && <ProductsTab />}
+                    {activeTab === 'Orders' && <OrdersTab />}
                     {activeTab === 'Categories' && <CategoriesTab />}
-                    {activeTab === 'Users'      && <UsersTab />}
-                    {activeTab === 'Roles'      && <RolesTab />}
+                    {activeTab === 'Users' && <UsersTab />}
+                    {activeTab === 'Roles' && <RolesTab />}
                 </div>
             </div>
         </>
@@ -394,9 +394,9 @@ function CategoriesTab() {
             <FormCard title={editId ? 'Edit Category' : 'Add Category'} onSubmit={handleSubmit}>
                 <div className="flex flex-col gap-3 mb-4">
                     {[
-                        { key: 'title',       placeholder: 'Title',                required: true  },
-                        { key: 'description', placeholder: 'Description',           required: true  },
-                        { key: 'imageUrl',    placeholder: 'Image URL (optional)',  required: false },
+                        { key: 'title', placeholder: 'Title', required: true },
+                        { key: 'description', placeholder: 'Description', required: true },
+                        { key: 'imageUrl', placeholder: 'Image URL (optional)', required: false },
                     ].map(({ key, placeholder, required }) => (
                         <input key={key} placeholder={placeholder} value={form[key]}
                             onChange={e => setForm({ ...form, [key]: e.target.value })}
@@ -481,18 +481,18 @@ function ProductsTab() {
     }
 
     if (isLoading) return <TabLoader />
-    const products   = productsData?.data || []
+    const products = productsData?.data || []
     const categories = categoriesData?.data || []
-    const filtered   = search ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase())) : products
+    const filtered = search ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase())) : products
 
     return (
         <div>
             <FormCard title={editId ? 'Edit Product' : 'Add Product'} onSubmit={handleSubmit}>
                 <div className="grid grid-cols-2 gap-2.5 mb-2.5">
                     {[
-                        { key: 'name',  placeholder: 'Product name',   type: 'text'   },
-                        { key: 'price', placeholder: 'Price',           type: 'number', min: '0', step: '0.01' },
-                        { key: 'stock', placeholder: 'Stock quantity',  type: 'number', min: '0' },
+                        { key: 'name', placeholder: 'Product name', type: 'text' },
+                        { key: 'price', placeholder: 'Price', type: 'number', min: '0', step: '0.01' },
+                        { key: 'stock', placeholder: 'Stock quantity', type: 'number', min: '0' },
                     ].map(({ key, placeholder, type, ...rest }) => (
                         <input key={key} placeholder={placeholder} type={type} value={form[key]}
                             onChange={e => setForm({ ...form, [key]: e.target.value })}

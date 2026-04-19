@@ -6,9 +6,9 @@ import { Helmet } from 'react-helmet-async'
 import { toast, confirm } from '../utils/swal'
 
 const TABS = [
-    { key: 'info',      label: 'Account Info' },
+    { key: 'info', label: 'Account Info' },
     { key: 'favorites', label: (n) => `Favorites (${n})` },
-    { key: 'stats',     label: 'Stats' },
+    { key: 'stats', label: 'Stats' },
 ]
 
 export default function Profile() {
@@ -18,9 +18,9 @@ export default function Profile() {
     const [updateProfile, { isLoading: isSaving }] = useUpdateProfileMutation()
     const [toggleFavorite] = useToggleFavoriteMutation()
 
-    const [editMode, setEditMode]   = useState(false)
-    const [form, setForm]           = useState(null)
-    const [errorMsg, setErrorMsg]   = useState('')
+    const [editMode, setEditMode] = useState(false)
+    const [form, setForm] = useState(null)
+    const [errorMsg, setErrorMsg] = useState('')
     const [activeTab, setActiveTab] = useState('info')
 
     const profile = profileData?.data
@@ -31,11 +31,11 @@ export default function Profile() {
     }, [profile])
 
     if (isLoading) return <p className="text-center mt-10 text-[var(--text-muted)]">Loading profile...</p>
-    if (!profile)  return <p className="text-center mt-10 text-[var(--brand)]">Failed to load profile</p>
+    if (!profile) return <p className="text-center mt-10 text-[var(--brand)]">Failed to load profile</p>
 
     const favorites = profile.favorites || []
-    const initials  = profile.name?.[0]?.toUpperCase() ?? '?'
-    const isAdmin   = profile.role?.role === 'admin'
+    const initials = profile.name?.[0]?.toUpperCase() ?? '?'
+    const isAdmin = profile.role?.role === 'admin'
 
     const handleEditClick = () => {
         setForm({ name: profile.name || '', email: profile.email || '' })
@@ -46,7 +46,7 @@ export default function Profile() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         setErrorMsg('')
-        if (!form.name.trim())  { setErrorMsg('Name is required');  return }
+        if (!form.name.trim()) { setErrorMsg('Name is required'); return }
         if (!form.email.trim()) { setErrorMsg('Email is required'); return }
         try {
             const result = await updateProfile(form).unwrap()
@@ -73,19 +73,19 @@ export default function Profile() {
     }
 
     const INFO_ROWS = [
-        { label: 'Full Name',       value: profile.name },
-        { label: 'Email Address',   value: profile.email },
-        { label: 'Account Role',    value: profile.role?.role || 'user', accent: true },
-        { label: 'Member Since',    value: new Date(profile.createdAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
-        { label: 'Last Updated',    value: new Date(profile.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) },
+        { label: 'Full Name', value: profile.name },
+        { label: 'Email Address', value: profile.email },
+        { label: 'Account Role', value: profile.role?.role || 'user', accent: true },
+        { label: 'Member Since', value: new Date(profile.createdAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
+        { label: 'Last Updated', value: new Date(profile.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) },
         { label: 'Saved Favorites', value: `${favorites.length} product${favorites.length !== 1 ? 's' : ''}` },
     ]
 
     const STAT_CARDS = [
-        { label: 'Saved Favorites',  value: favorites.length, colorClass: 'text-[var(--brand)]',        bgClass: 'bg-[var(--brand-light)]' },
-        { label: 'Account Type',     value: profile.role?.role || 'user', colorClass: 'text-[var(--text-primary)]', bgClass: 'bg-[var(--bg-page)]' },
+        { label: 'Saved Favorites', value: favorites.length, colorClass: 'text-[var(--brand)]', bgClass: 'bg-[var(--brand-light)]' },
+        { label: 'Account Type', value: profile.role?.role || 'user', colorClass: 'text-[var(--text-primary)]', bgClass: 'bg-[var(--bg-page)]' },
         { label: 'Profile Complete', value: profile.name && profile.email ? '100%' : '50%', colorClass: 'text-green-500', bgClass: 'bg-green-50' },
-        { label: 'Days as Member',   value: daysAsMember, colorClass: 'text-blue-500', bgClass: 'bg-blue-50' },
+        { label: 'Days as Member', value: daysAsMember, colorClass: 'text-blue-500', bgClass: 'bg-blue-50' },
     ]
 
     return (

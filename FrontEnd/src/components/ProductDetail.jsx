@@ -64,17 +64,17 @@ export default function ProductDetail() {
 
     const { data: reviewsData, refetch: refetchReviews } = useGetProductReviewsQuery(product?._id, { skip: !product })
     const { data: profileData, refetch: refetchProfile } = useGetProfileQuery(undefined, { skip: !user })
-    const [addToCart]                                    = useAddToCartMutation()
+    const [addToCart] = useAddToCartMutation()
     const [toggleFavorite, { isLoading: isFavLoading }] = useToggleFavoriteMutation()
-    const [addReview, { isLoading: isReviewing }]       = useAddReviewMutation()
-    const [deleteReview]                                 = useDeleteReviewMutation()
+    const [addReview, { isLoading: isReviewing }] = useAddReviewMutation()
+    const [deleteReview] = useDeleteReviewMutation()
 
-    const [quantity, setQuantity]           = useState(1)
+    const [quantity, setQuantity] = useState(1)
     const [selectedImage, setSelectedImage] = useState(0)
-    const [reviewForm, setReviewForm]       = useState({ rating: 5, comment: '' })
-    const [reviewError, setReviewError]     = useState('')
+    const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' })
+    const [reviewError, setReviewError] = useState('')
 
-    const reviews   = reviewsData?.data || []
+    const reviews = reviewsData?.data || []
     const favorites = profileData?.data?.favorites || []
 
     const isFavorited = favorites.some(

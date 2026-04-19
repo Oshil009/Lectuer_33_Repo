@@ -1,4 +1,3 @@
-// ===== Login.jsx =====
 import { useState } from 'react'
 import { useLoginMutation } from '../services/userApiSlice'
 import { useNavigate, Link } from 'react-router-dom'
@@ -105,36 +104,36 @@ export default function Login() {
                                             </svg>
                                         )}
                                     </button>
+                                </div>
                             </div>
+
+                            <button type="submit" disabled={isLoading}
+                                className="btn btn--primary btn--primary-full flex items-center justify-center gap-2">
+                                {isLoading ? (
+                                    <>
+                                        <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                            <circle cx="7" cy="7" r="5.5" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
+                                            <path d="M7 1.5a5.5 5.5 0 015.5 5.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+                                        </svg>
+                                        Signing in...
+                                    </>
+                                ) : (
+                                    <>
+                                        Sign in
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                            <path d="M2 7h10M8 3l4 4-4 4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </>
+                                )}
+                            </button>
+                        </form>
                     </div>
 
-                    <button type="submit" disabled={isLoading}
-                        className="btn btn--primary btn--primary-full flex items-center justify-center gap-2">
-                        {isLoading ? (
-                            <>
-                                <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                    <circle cx="7" cy="7" r="5.5" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
-                                    <path d="M7 1.5a5.5 5.5 0 015.5 5.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-                                </svg>
-                                Signing in...
-                            </>
-                        ) : (
-                            <>
-                                Sign in
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                    <path d="M2 7h10M8 3l4 4-4 4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            </>
-                        )}
-                    </button>
-                </form>
-            </div>
-
-            <p className="auth-footer-text">
-                Don't have an account?
-                <Link to="/register" className="auth-footer-link">Create one</Link>
-            </p>
-        </div >
+                    <p className="auth-footer-text">
+                        Don't have an account?
+                        <Link to="/register" className="auth-footer-link">Create one</Link>
+                    </p>
+                </div >
             </div >
         </>
     )
