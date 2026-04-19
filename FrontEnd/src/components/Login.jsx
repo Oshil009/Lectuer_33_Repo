@@ -86,9 +86,13 @@ export default function Login() {
                                         value={form.password}
                                         onChange={e => setForm({ ...form, password: e.target.value })}
                                         className="field field--icon-both" />
-                                    <button type="button" onClick={() => setShowPassword(v => !v)}
+                                    <button type="button" onClick={(e) => {
+                                        e.preventDefault();
+                                        setShowPassword(v => !v);
+                                    }}
                                         className="field-icon field-icon--right"
-                                        aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                        aria-pressed={showPassword}>
                                         {showPassword ? (
                                             <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
                                                 <path d="M2 2l11 11M6.5 6.7A2 2 0 008.3 8.5M4.2 4.4C2.8 5.3 1.8 6.4 1 7.5c1.5 3.5 4 5.5 6.5 5.5 1.1 0 2.2-.4 3.1-1M7.5 2C5 2 2.5 4 1 7.5c.5 1.1 1.1 2 1.9 2.8"
@@ -101,37 +105,37 @@ export default function Login() {
                                             </svg>
                                         )}
                                     </button>
-                                </div>
                             </div>
-
-                            <button type="submit" disabled={isLoading}
-                                className="btn btn--primary btn--primary-full flex items-center justify-center gap-2">
-                                {isLoading ? (
-                                    <>
-                                        <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                            <circle cx="7" cy="7" r="5.5" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
-                                            <path d="M7 1.5a5.5 5.5 0 015.5 5.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-                                        </svg>
-                                        Signing in...
-                                    </>
-                                ) : (
-                                    <>
-                                        Sign in
-                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                            <path d="M2 7h10M8 3l4 4-4 4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </>
-                                )}
-                            </button>
-                        </form>
                     </div>
 
-                    <p className="auth-footer-text">
-                        Don't have an account?
-                        <Link to="/register" className="auth-footer-link">Create one</Link>
-                    </p>
-                </div>
+                    <button type="submit" disabled={isLoading}
+                        className="btn btn--primary btn--primary-full flex items-center justify-center gap-2">
+                        {isLoading ? (
+                            <>
+                                <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <circle cx="7" cy="7" r="5.5" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
+                                    <path d="M7 1.5a5.5 5.5 0 015.5 5.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+                                </svg>
+                                Signing in...
+                            </>
+                        ) : (
+                            <>
+                                Sign in
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M2 7h10M8 3l4 4-4 4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </>
+                        )}
+                    </button>
+                </form>
             </div>
+
+            <p className="auth-footer-text">
+                Don't have an account?
+                <Link to="/register" className="auth-footer-link">Create one</Link>
+            </p>
+        </div >
+            </div >
         </>
     )
 }
