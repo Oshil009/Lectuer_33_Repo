@@ -18,6 +18,8 @@
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.1.1",
     "mongoose": "^7.4.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "slugify": "^1.6.9"
   },
   "devDependencies": {

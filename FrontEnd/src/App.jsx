@@ -8,6 +8,7 @@ import './App.css'
 
 const Login = lazy(() => import('./components/Login'))
 const Register = lazy(() => import('./components/Register'))
+const AuthCallback = lazy(() => import('./components/AuthCallback'))
 const Cart = lazy(() => import('./components/Cart'))
 const Orders = lazy(() => import('./components/Orders'))
 const ProductDetail = lazy(() => import('./components/ProductDetail'))
@@ -42,6 +43,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/products/:slug" element={<ProductDetail />} />
             <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
@@ -49,7 +51,6 @@ function App() {
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/resetPassword" element={<ProtectedRoute><ResetPassword /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Suspense>
