@@ -27,6 +27,7 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: 0.5rem;
     gap: 10px;
     width: 100%;
     padding: 10px 16px;
@@ -50,9 +51,9 @@ img {
 
 .auth-divider {
     display: flex;
+    margin-top: 0.5rem;
     align-items: center;
     gap: 12px;
-    margin-bottom: 20px;
     color: var(--text-hint);
     font-size: 12px;
 }

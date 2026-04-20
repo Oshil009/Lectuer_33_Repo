@@ -7,18 +7,15 @@ export default function AuthCallback() {
     const [searchParams] = useSearchParams()
     const navigate = useNavigate()
     const { login } = useAuth()
-
     useEffect(() => {
         const token = searchParams.get('token')
         const userRaw = searchParams.get('user')
         const error = searchParams.get('error')
-
         if (error) {
             toast('Google sign-in failed. Please try again.', 'error')
             navigate('/login')
             return
         }
-
         if (token && userRaw) {
             try {
                 const user = JSON.parse(decodeURIComponent(userRaw))
@@ -33,7 +30,6 @@ export default function AuthCallback() {
             navigate('/login')
         }
     }, [])
-
     return (
         <div className="state-center">
             <div className="state-center__inner">
