@@ -8,6 +8,7 @@ const createOrder = async (req, res) => {
     const userId = req.user.id;
     const userName = req.user.name;
     const userEmail = req.user.email;
+
     if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ success: false, message: 'Your cart is empty or invalid' });
     }
@@ -28,11 +29,14 @@ const createOrder = async (req, res) => {
             calculatedTotal += product.price * item.quantity;
             item.price = product.price;
         }
+
         for (const item of items) {
             await productModel.findByIdAndUpdate(item.productId, { $inc: { stock: -item.quantity } });
         }
+
         const newOrder = new orderModel({ user: userId, items, totalPrice: calculatedTotal, shippingAddress });
         const savedOrder = await newOrder.save();
+        await cartModel.findOneAndUpdate({ userId }, { $set: { items: [] } });
         const emailSubject = 'Order Confirmed - ShopNow';
         const emailHtml = `
         <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
@@ -41,20 +45,21 @@ const createOrder = async (req, res) => {
             <p>Thank you for shopping with us! We have successfully received your order.</p>
             <div style="background: #f4f4f4; padding: 15px; border-radius: 8px;">
                 <p style="margin: 0;"><strong>Order ID:</strong> ${savedOrder._id}</p>
+                <p style="margin: 8px 0 0;"><strong>Total:</strong> $${calculatedTotal.toFixed(2)}</p>
             </div>
             <p>We will notify you as soon as your items are shipped.</p>
             <hr style="border: none; border-top: 1px solid #eee;" />
             <p style="font-size: 0.8em; color: #777;">ShopNow Inc. | Amman, Jordan</p>
-        </div>
-    `;
-        await sendEmail({
-            email: userEmail,
-            subject: emailSubject,
-            html: emailHtml
-        });
+        </div>`;
+        sendEmail({ email: userEmail, subject: emailSubject, html: emailHtml })
+            .then(() => console.log(`✅ Order confirmation email sent to ${userEmail}`))
+            .catch(err => console.error(`⚠️  Email failed for order ${savedOrder._id}:`, err.message));
         const populatedOrder = await savedOrder.populate('user', 'name email');
-        await cartModel.findOneAndUpdate({ userId }, { $set: { items: [] } });
-        res.status(201).json({ success: true, message: 'Order placed successfully', data: populatedOrder });
+        res.status(201).json({
+            success: true,
+            message: 'Order placed successfully',
+            data: populatedOrder
+        });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message || 'Server Error' });
     }
