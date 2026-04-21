@@ -24,7 +24,6 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(passport.initialize());
-
 app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
