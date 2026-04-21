@@ -5,7 +5,6 @@ require("./models/db");
 const cors = require('cors');
 const passport = require('passport');
 require('./config/passport');
-// app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
 const allowedOrigins = [
     process.env.FRONTEND_URL, 
     'http://localhost:5173',

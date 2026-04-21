@@ -817,6 +817,8 @@ body {
     padding: 14px;
     cursor: pointer;
     transition: border-color 0.15s;
+    display: flex;
+    flex-direction: column;
 }
 
 .product-card:hover {
@@ -862,6 +864,7 @@ body {
     color: var(--text-hint);
     margin: 0 0 8px;
     line-height: 1.5;
+    flex: 1;
 }
 
 .product-card__price {
