@@ -5,8 +5,15 @@ require("./models/db");
 const cors = require('cors');
 const passport = require('passport');
 require('./config/passport');
-
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
+// app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
+app.use(cors({ 
+    origin: [
+        'http://localhost:5173', 
+        'https://shopnow0.netlify.app',
+        'https://shopnow0.netlify.app/' // مع شحطة للنهاية للاحتياط
+    ], 
+    credentials: true 
+}));
 app.use(express.json());
 app.use(passport.initialize());
 
