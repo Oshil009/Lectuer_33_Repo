@@ -5,6 +5,7 @@ import Navbar from './components/Navbar'
 import Home from './components/Home'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
+import Footer from './components/Footer'
 
 const Login = lazy(() => import('./components/Login'))
 const Register = lazy(() => import('./components/Register'))
@@ -55,6 +56,7 @@ function App() {
           </Routes>
         </Suspense>
       </main>
+      <Footer/>
     </div>
   )
 }

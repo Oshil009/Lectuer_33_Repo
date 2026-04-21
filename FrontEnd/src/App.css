@@ -2020,3 +2020,16 @@ body {
 .order-table-row:hover td {
     background: var(--bg-subtle);
 }
+
+@media (max-width: 768px) {
+    .footer-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 28px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
