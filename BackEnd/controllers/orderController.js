@@ -7,7 +7,7 @@ const createOrder = async (req, res) => {
     const { items, shippingAddress } = req.body;
     const userId = req.user.id;
     const userName = req.user.name;
-    const userEmail=req.user.email;
+    const userEmail = req.user.email;
     if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ success: false, message: 'Your cart is empty or invalid' });
     }
@@ -17,7 +17,6 @@ const createOrder = async (req, res) => {
 
     try {
         let calculatedTotal = 0;
-
         for (const item of items) {
             const product = await productModel.findById(item.productId);
             if (!product) {
@@ -29,34 +28,32 @@ const createOrder = async (req, res) => {
             calculatedTotal += product.price * item.quantity;
             item.price = product.price;
         }
-
         for (const item of items) {
             await productModel.findByIdAndUpdate(item.productId, { $inc: { stock: -item.quantity } });
         }
-        const emailSubject = 'Order Confirmed -ShopNow';
-        const emailHtml = `
-    <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
-        <h1 style="color: #f39c12;">Order Confirmation</h1>
-        <p>Hi ${userName || 'there'},</p>
-        <p>Thank you for shopping with us! We have successfully received your order.</p>
-        <div style="background: #f4f4f4; padding: 15px; border-radius: 8px;">
-            <p style="margin: 0;"><strong>Order ID:</strong> ${order._id}</p>
-        </div>
-        <p>We will notify you as soon as your items are shipped.</p>
-        <hr style="border: none; border-top: 1px solid #eee;" />
-        <p style="font-size: 0.8em; color: #777;">ShopNow Inc. | Amman, Jordan</p>
-    </div>
-`;
         const newOrder = new orderModel({ user: userId, items, totalPrice: calculatedTotal, shippingAddress });
         const savedOrder = await newOrder.save();
+        const emailSubject = 'Order Confirmed - ShopNow';
+        const emailHtml = `
+        <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
+            <h1 style="color: #f39c12;">Order Confirmation</h1>
+            <p>Hi ${userName || 'there'},</p>
+            <p>Thank you for shopping with us! We have successfully received your order.</p>
+            <div style="background: #f4f4f4; padding: 15px; border-radius: 8px;">
+                <p style="margin: 0;"><strong>Order ID:</strong> ${savedOrder._id}</p>
+            </div>
+            <p>We will notify you as soon as your items are shipped.</p>
+            <hr style="border: none; border-top: 1px solid #eee;" />
+            <p style="font-size: 0.8em; color: #777;">ShopNow Inc. | Amman, Jordan</p>
+        </div>
+    `;
         await sendEmail({
-            email:userEmail,
+            email: userEmail,
             subject: emailSubject,
             html: emailHtml
         });
         const populatedOrder = await savedOrder.populate('user', 'name email');
         await cartModel.findOneAndUpdate({ userId }, { $set: { items: [] } });
-
         res.status(201).json({ success: true, message: 'Order placed successfully', data: populatedOrder });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message || 'Server Error' });
