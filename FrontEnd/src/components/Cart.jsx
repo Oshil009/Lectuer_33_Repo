@@ -77,7 +77,10 @@ export default function Cart() {
         const result = await confirm('Clear entire cart?', 'All items will be removed.', 'Clear Cart')
         if (!result.isConfirmed) return
         try { await clearCart().unwrap(); toast('Cart cleared', 'info') }
-        catch (err) { toast('Failed to clear cart', 'error') }
+        catch (err) {
+            toast('Failed to clear cart', 'error');
+            console.log(err.message);
+        }
     }
 
     const handlePlaceOrder = async (e) => {
@@ -86,9 +89,12 @@ export default function Cart() {
         const orderItems = items.map(item => ({ productId: item.productId._id, quantity: item.quantity }))
         try {
             await createOrder({ items: orderItems, shippingAddress }).unwrap()
-            await clearCart().unwrap()
-            toast('Order placed successfully! 🎉', 'success')
-            setTimeout(() => navigate('/orders'), 1500)
+            try { await clearCart().unwrap() } catch (err) {
+                toast('Order placed successfully! 🎉', 'success')
+                console.log(err.message);
+                setTimeout(() => navigate('/orders'), 1500)
+            }
+
         } catch (err) {
             setOrderError(err.data?.message || 'Failed to place order')
         }
