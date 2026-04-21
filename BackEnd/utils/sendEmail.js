@@ -11,10 +11,10 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async (to, subject, htmlContent) => {
     try {
         const info = await transporter.sendMail({
-            from: '"ShopNow" <process.env.SMTP_USER>',
-            to: to,
-            subject: subject,
-            html: htmlContent,
+            from: `"ShopNow" <${process.env.SMTP_USER}>`,
+            to: options.email,
+            subject: options.subject,
+            html: options.html,
         });
         console.log("Message sent: %s", info.messageId);
         return info;
