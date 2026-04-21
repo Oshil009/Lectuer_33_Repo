@@ -156,7 +156,6 @@ export default function Footer() {
                                 </svg>
                                 ezzaldeenalbitar9@gmail.com
                             </a>
-
                             <a href="tel:+962779409494"
                                 style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, transition: 'color 0.15s' }}
                                 onMouseEnter={e => e.currentTarget.style.color = '#e94560'}
@@ -176,8 +175,6 @@ export default function Footer() {
                         </div>
                     </div>
                 </div>
-
-                {/* Bottom bar */}
                 <div style={{
                     borderTop: '0.5px solid rgba(255,255,255,0.07)',
                     padding: '16px 0',
