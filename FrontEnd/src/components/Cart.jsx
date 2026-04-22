@@ -4,6 +4,7 @@ import { useCreateOrderMutation } from '../services/orderApiSlice'
 import { useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { toast, confirm } from '../utils/swal'
+import axios from 'axios';
 
 const FIELDS = [
     { key: 'city', placeholder: 'City', icon: <path d="M7 2C4.2 2 2 4.2 2 7c0 4 5 9 5 9s5-5 5-9c0-2.8-2.2-5-5-5zm0 6.5A1.5 1.5 0 117 5a1.5 1.5 0 010 3z" stroke="#9ca3af" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" /> },
@@ -22,6 +23,7 @@ export default function Cart() {
     const [shippingAddress, setShippingAddress] = useState({ city: '', street: '', phone: '' })
     const [showCheckout, setShowCheckout] = useState(false)
     const [orderError, setOrderError] = useState('')
+    const [loadingGeo, setLoadingGeo] = useState(false);
 
     if (isLoading) return (
         <div className="state-center">
@@ -82,7 +84,34 @@ export default function Cart() {
             console.log(err.message);
         }
     }
-
+    const handleGetLocation = async () => {
+        if (!navigator.geolocation) {
+            return toast('Geolocation is not supported by your browser.', 'error');
+        }
+        setLoadingGeo(true);
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+                const res = await axios.get(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`
+                );
+                const addr = res.data.address;
+                const city = addr.city || addr.town || addr.governorate || '';
+                const street = addr.road || addr.suburb || '';
+                setShippingAddress(prev => ({ ...prev, city, street }));
+                toast('Location detected successfully!', 'success');
+            } catch (err) {
+                console.log(err);
+                toast('Failed to fetch address details.', 'error');
+            } finally {
+                setLoadingGeo(false);
+            }
+        }, (error) => {
+            setLoadingGeo(false);
+            const msg = error.code === 1 ? 'Permission denied. Please enable location.' : 'Position unavailable.';
+            toast(msg, 'error');
+        });
+    };
     const handlePlaceOrder = async (e) => {
         e.preventDefault()
         setOrderError('')
@@ -208,10 +237,32 @@ export default function Cart() {
                                 Proceed to Checkout
                             </button>
                         ) : (
-                            <div>
-                                <h3 className="text-sm font-semibold mt-0 mb-4 text-[var(--text-primary)]">
-                                    Shipping Address
-                                </h3>
+                            <div className="animate-in fade-in duration-300">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-sm font-semibold text-[var(--text-primary)] m-0">
+                                        Shipping Address
+                                    </h3>
+                                    <button
+                                        type="button"
+                                        onClick={handleGetLocation}
+                                        disabled={loadingGeo}
+                                        className="flex items-center gap-2 text-[11px] font-bold py-1.5 px-3 rounded-md transition-all bg-[var(--brand)] text-white hover:opacity-90 active:scale-95"
+                                        style={{ zIndex: 10, position: 'relative' }} 
+                                    >
+                                        {loadingGeo ? (
+                                            <>
+                                                <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                </svg>
+                                                Locating...
+                                            </>
+                                        ) : (
+                                            "Use My Location"
+                                        )}
+                                    </button>
+                                </div>
+
                                 <form onSubmit={handlePlaceOrder}>
                                     {FIELDS.map(({ key, placeholder, icon }) => (
                                         <div key={key} className="relative mb-3">
@@ -230,37 +281,19 @@ export default function Cart() {
                                     ))}
 
                                     {orderError && (
-                                        <div className="auth-error">
-                                            <p className="auth-error__text">{orderError}</p>
+                                        <div className="auth-error mb-3">
+                                            <p className="auth-error__text text-xs">{orderError}</p>
                                         </div>
                                     )}
 
                                     <div className="flex gap-2.5 mt-4">
                                         <button type="button" onClick={() => setShowCheckout(false)}
-                                            className="btn btn--secondary flex items-center gap-1.5">
-                                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                                                <path d="M8 2.5L4.5 6.5 8 10.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
+                                            className="btn btn--secondary flex items-center gap-1.5 py-2 px-4">
                                             Back
                                         </button>
                                         <button type="submit" disabled={isOrdering}
-                                            className="btn btn--success flex-1 flex items-center justify-center gap-2">
-                                            {isOrdering ? (
-                                                <>
-                                                    <svg className="animate-spin" width="13" height="13" viewBox="0 0 14 14" fill="none">
-                                                        <circle cx="7" cy="7" r="5.5" stroke="rgba(255,255,255,0.4)" strokeWidth="2" />
-                                                        <path d="M7 1.5a5.5 5.5 0 015.5 5.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-                                                    </svg>
-                                                    Placing Order...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    Place Order
-                                                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                                                        <path d="M2 6.5h9M7.5 3l3.5 3.5-3.5 3.5" stroke="#fff" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                </>
-                                            )}
+                                            className="btn btn--success flex-1 flex items-center justify-center gap-2 py-2">
+                                            {isOrdering ? 'Placing Order...' : 'Confirm Order'}
                                         </button>
                                     </div>
                                 </form>

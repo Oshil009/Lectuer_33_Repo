@@ -10,33 +10,31 @@ const TABS = [
     { key: 'favorites', label: (n) => `Favorites (${n})` },
     { key: 'stats', label: 'Stats' },
 ]
-
 export default function Profile() {
     const { login, token } = useAuth()
     const navigate = useNavigate()
     const { data: profileData, isLoading, refetch } = useGetProfileQuery()
     const [updateProfile, { isLoading: isSaving }] = useUpdateProfileMutation()
     const [toggleFavorite] = useToggleFavoriteMutation()
-
     const [editMode, setEditMode] = useState(false)
     const [form, setForm] = useState(null)
     const [errorMsg, setErrorMsg] = useState('')
-    const [activeTab, setActiveTab] = useState('info')
-
+    const [selectedTab, setSelectedTab] = useState('info')
     const profile = profileData?.data
-
     const daysAsMember = useMemo(() => {
         if (!profile) return 0
         return Math.floor((new Date() - new Date(profile.createdAt)) / 86400000)
     }, [profile])
-
+    const isAdmin = profile?.role?.role === 'admin'
+    const favorites = profile?.favorites || []
+    const activeTab = (isAdmin && selectedTab === 'favorites') ? 'info' : selectedTab;
     if (isLoading) return <p className="text-center mt-10 text-[var(--text-muted)]">Loading profile...</p>
     if (!profile) return <p className="text-center mt-10 text-[var(--brand)]">Failed to load profile</p>
-
-    const favorites = profile.favorites || []
     const initials = profile.name?.[0]?.toUpperCase() ?? '?'
-    const isAdmin = profile.role?.role === 'admin'
-
+    const filteredTabs = TABS.filter(tab => {
+        if (isAdmin && tab.key === 'favorites') return false;
+        return true;
+    });
     const handleEditClick = () => {
         setForm({ name: profile.name || '', email: profile.email || '' })
         setEditMode(v => !v)
@@ -59,7 +57,6 @@ export default function Profile() {
             setErrorMsg(err.data?.message || 'Failed to update profile')
         }
     }
-
     const handleRemoveFavorite = async (productId, name) => {
         const result = await confirm(`Remove "${name}" from favorites?`, '', 'Remove')
         if (!result.isConfirmed) return
@@ -78,11 +75,11 @@ export default function Profile() {
         { label: 'Account Role', value: profile.role?.role || 'user', accent: true },
         { label: 'Member Since', value: new Date(profile.createdAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
         { label: 'Last Updated', value: new Date(profile.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) },
-        { label: 'Saved Favorites', value: `${favorites.length} product${favorites.length !== 1 ? 's' : ''}` },
+        ...(!isAdmin ? [{ label: 'Saved Favorites', value: `${favorites.length} product${favorites.length !== 1 ? 's' : ''}` }] : []),
     ]
 
     const STAT_CARDS = [
-        { label: 'Saved Favorites', value: favorites.length, colorClass: 'text-[var(--brand)]', bgClass: 'bg-[var(--brand-light)]' },
+        ...(!isAdmin ? [{ label: 'Saved Favorites', value: favorites.length, colorClass: 'text-[var(--brand)]', bgClass: 'bg-[var(--brand-light)]' }] : []),
         { label: 'Account Type', value: profile.role?.role || 'user', colorClass: 'text-[var(--text-primary)]', bgClass: 'bg-[var(--bg-page)]' },
         { label: 'Profile Complete', value: profile.name && profile.email ? '100%' : '50%', colorClass: 'text-green-500', bgClass: 'bg-green-50' },
         { label: 'Days as Member', value: daysAsMember, colorClass: 'text-blue-500', bgClass: 'bg-blue-50' },
@@ -155,11 +152,14 @@ export default function Profile() {
                     )}
 
                     <div className="card tab-bar mb-5">
-                        {TABS.map(({ key, label }) => {
+                        {filteredTabs.map(({ key, label }) => {
                             const lbl = typeof label === 'function' ? label(favorites.length) : label
                             return (
-                                <button key={key} onClick={() => setActiveTab(key)}
-                                    className={`tab-btn ${activeTab === key ? 'tab-btn--active' : ''}`}>
+                                <button
+                                    key={key}
+                                    onClick={() => setSelectedTab(key)}
+                                    className={`tab-btn ${activeTab === key ? 'tab-btn--active' : ''}`}
+                                >
                                     {lbl}
                                 </button>
                             )

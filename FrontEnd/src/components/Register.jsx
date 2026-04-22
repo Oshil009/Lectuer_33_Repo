@@ -120,11 +120,18 @@ export default function Register() {
                                     <button type="button" onClick={() => setShowPassword(v => !v)}
                                         className="field-icon field-icon--right"
                                         aria-label={showPassword ? 'Hide password' : 'Show password'}>
-                                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                                            <path d="M1 7.5C2.5 4 5 2 7.5 2S12.5 4 14 7.5C12.5 11 10 13 7.5 13S2.5 11 1 7.5z"
-                                                stroke="currentColor" strokeWidth="1.2" />
-                                            <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" strokeWidth="1.2" />
-                                        </svg>
+                                        {showPassword ? (
+                                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                                                <path d="M1 1l13 13M6.3 6.4a2 2 0 002.7 2.8M3.7 3.8C2.2 4.9 1.1 6.2 1 7c.8 3 3.4 5 6.5 5 1.4 0 2.7-.5 3.8-1.3M5.5 2.6C6.1 2.2 6.8 2 7.5 2c3 0 5.7 2 6.5 6-.2 1-.7 1.9-1.4 2.7"
+                                                    stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                                            </svg>
+                                        ) : (
+                                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                                                <path d="M1 7.5C2.5 4 5 2 7.5 2S12.5 4 14 7.5C12.5 11 10 13 7.5 13S2.5 11 1 7.5z"
+                                                    stroke="currentColor" strokeWidth="1.2" />
+                                                <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" strokeWidth="1.2" />
+                                            </svg>
+                                        )}
                                     </button>
                                 </div>
                             </div>

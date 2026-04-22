@@ -42,11 +42,17 @@ function PasswordInput({ id, value, onChange, placeholder }) {
                 className="field-icon field-icon--right"
                 aria-label={show ? 'Hide password' : 'Show password'}
             >
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                    <path d="M1 7.5C2.5 4 5 2 7.5 2S12.5 4 14 7.5C12.5 11 10 13 7.5 13S2.5 11 1 7.5z"
-                        stroke="currentColor" strokeWidth="1.2" />
-                    <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" strokeWidth="1.2" />
-                </svg>
+                {show ? (
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                        <path d="M1 1l13 13M6.5 6.6A2 2 0 007.5 10a2 2 0 002-1.5M4 4.2C2.3 5.3 1.2 6.6 1 7.5c.8 3 3.5 5 6.5 5 1.5 0 2.8-.5 3.9-1.3M3.5 2.5C4.7 2 6 1.5 7.5 1.5c3 0 5.7 2 6.5 6-.3 1.2-.9 2.3-1.8 3.2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                    </svg>
+                ) : (
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                        <path d="M1 7.5C2.5 4 5 2 7.5 2S12.5 4 14 7.5C12.5 11 10 13 7.5 13S2.5 11 1 7.5z"
+                            stroke="currentColor" strokeWidth="1.2" />
+                        <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" strokeWidth="1.2" />
+                    </svg>
+                )}
             </button>
         </div>
     )
@@ -155,21 +161,21 @@ export default function ResetPassword() {
 
                             <div className="mb-5">
                                 <label htmlFor="confirmPassword" className="field-label">Confirm new password</label>
-                                <div className="relative">
-                                    <PasswordInput
-                                        id="confirmPassword"
-                                        value={form.confirmPassword}
-                                        onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
-                                        placeholder="Repeat new password"
-                                    />
-                                    {passwordsMatch && (
-                                        <div className="match-check">
-                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                                <path d="M2 7l4 4 6-6" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                        </div>
-                                    )}
-                                </div>
+
+                                <PasswordInput
+                                    id="confirmPassword"
+                                    value={form.confirmPassword}
+                                    onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
+                                    placeholder="Repeat new password"
+                                />
+                                {passwordsMatch && (
+                                    <div className="flex items-center gap-1 mt-1.5">
+                                        <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                                            <path d="M2 7l4 4 6-6" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        <span style={{ fontSize: 11, color: '#22c55e' }}>Passwords match</span>
+                                    </div>
+                                )}
                                 {passwordsMismatch && (
                                     <p className="mismatch-text">Passwords do not match</p>
                                 )}

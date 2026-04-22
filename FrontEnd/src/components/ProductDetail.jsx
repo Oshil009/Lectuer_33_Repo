@@ -392,7 +392,7 @@ export default function ProductDetail() {
                                                         month: 'short', day: 'numeric', year: 'numeric'
                                                     })}
                                                 </time>
-                                                {(user?._id === review.userId?._id || user?.role?.role === 'admin') && (
+                                                {(user?._id === review.userId?._id) && (
                                                     <button onClick={() => handleDeleteReview(review._id)}
                                                         className="review-delete-btn">Delete</button>
                                                 )}

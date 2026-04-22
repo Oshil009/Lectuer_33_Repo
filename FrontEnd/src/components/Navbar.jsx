@@ -2,27 +2,28 @@ import { useCallback, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { useGetCartQuery } from '../services/cartApiSlice'
+import { useDispatch } from 'react-redux';
+import { userApiSlice } from '../services/userApiSlice';
 
 export default function Navbar() {
     const navigate = useNavigate()
     const { user, logout, isAdmin } = useAuth()
-    const { data: cartData } = useGetCartQuery(undefined, { skip: !user })
+    const { data: cartData } = useGetCartQuery(undefined, { skip: !user || isAdmin })
     const [menuOpen, setMenuOpen] = useState(false)
-
+    const dispatch = useDispatch();
     const cartCount = cartData?.data?.items?.reduce((sum, i) => sum + i.quantity, 0) || 0
-
     const handleLogout = useCallback(() => {
         logout()
+        dispatch(userApiSlice.util.resetApiState());
         navigate('/login')
         setMenuOpen(false)
-    }, [logout, navigate])
+    }, [logout, navigate, dispatch])
 
     const close = () => setMenuOpen(false)
 
     return (
         <nav aria-label="Main navigation" className="navbar sticky top-0 z-50">
             <div className="flex items-center justify-between px-5 h-14">
-
                 <Link to="/" className="flex items-center gap-2 no-underline" onClick={close}>
                     <span className="navbar__logo-icon">
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -34,16 +35,23 @@ export default function Navbar() {
                         Shop<span className="navbar__logo-accent">Now</span>
                     </span>
                 </Link>
-
                 <div className="hidden-mobile flex items-center gap-1.5">
-                    <NavLink to="/" onClick={close}>Home</NavLink>
                     {user ? (
                         <>
-                            <CartLink cartCount={cartCount} onClick={close} />
-                            <NavLink to="/favorites" onClick={close}>Favorites</NavLink>
-                            <NavLink to="/orders" onClick={close}>Orders</NavLink>
-                            <NavLink to="/profile" onClick={close}>Profile</NavLink>
-                            {isAdmin && <Link to="/admin" className="navbar__admin-link" onClick={close}>Admin</Link>}
+                            {isAdmin ? (
+                                <>
+                                    <Link to="/admin" className="navbar__admin-link" onClick={close}>Admin</Link>
+                                    <NavLink to="/profile" onClick={close}>Profile</NavLink>
+                                </>
+                            ) : (
+                                <>
+                                    <NavLink to="/" onClick={close}>Home</NavLink>
+                                    <CartLink cartCount={cartCount} onClick={close} />
+                                    <NavLink to="/favorites" onClick={close}>Favorites</NavLink>
+                                    <NavLink to="/orders" onClick={close}>Orders</NavLink>
+                                    <NavLink to="/profile" onClick={close}>Profile</NavLink>
+                                </>
+                            )}
                             <div className="navbar__divider" />
                             <div className="navbar__avatar-pill">
                                 <div className="navbar__avatar">{user.name?.charAt(0).toUpperCase()}</div>
@@ -53,6 +61,7 @@ export default function Navbar() {
                         </>
                     ) : (
                         <>
+                            <NavLink to="/" onClick={close}>Home</NavLink>
                             <div className="navbar__divider" />
                             <Link to="/login" className="navbar__btn-login" onClick={close}>Login</Link>
                             <Link to="/register" className="navbar__btn-register" onClick={close}>Register</Link>
@@ -81,7 +90,6 @@ export default function Navbar() {
                         {menuOpen && (
                             <>
                                 <div className="navbar__backdrop" onClick={close} />
-
                                 <div className="navbar__dropdown">
                                     {user && (
                                         <div className="navbar__dropdown-user">
@@ -97,19 +105,29 @@ export default function Navbar() {
 
                                     {user ? (
                                         <>
-                                            <MobileLink to="/" onClick={close}>Home</MobileLink>
-                                            <MobileLink to="/cart" onClick={close}>
-                                                Cart {cartCount > 0 && <span className="navbar__cart-badge">{cartCount}</span>}
-                                            </MobileLink>
-                                            <MobileLink to="/favorites" onClick={close}>Favorites</MobileLink>
-                                            <MobileLink to="/orders" onClick={close}>Orders</MobileLink>
-                                            <MobileLink to="/profile" onClick={close}>Profile</MobileLink>
-                                            {isAdmin && <MobileLink to="/admin" onClick={close}>Admin</MobileLink>}
+                                            {isAdmin ? (
+                                                <>
+                                                    <MobileLink to="/admin" onClick={close}>Admin</MobileLink>
+                                                    <MobileLink to="/profile" onClick={close}>Profile</MobileLink>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <MobileLink to="/" onClick={close}>Home</MobileLink>
+                                                    <MobileLink to="/cart" onClick={close}>
+                                                        Cart {cartCount > 0 && <span className="navbar__cart-badge">{cartCount}</span>}
+                                                    </MobileLink>
+                                                    <MobileLink to="/favorites" onClick={close}>Favorites</MobileLink>
+                                                    <MobileLink to="/orders" onClick={close}>Orders</MobileLink>
+                                                    <MobileLink to="/profile" onClick={close}>Profile</MobileLink>
+                                                </>
+                                            )}
                                             <div className="navbar__mobile-divider" />
                                             <button onClick={handleLogout} className="navbar__mobile-logout">Logout</button>
                                         </>
                                     ) : (
                                         <>
+                                            <MobileLink to="/" onClick={close}>Home</MobileLink>
+                                            <div className="navbar__mobile-divider" />
                                             <Link to="/login" className="navbar__mobile-auth-btn navbar__mobile-auth-btn--outline" onClick={close}>Login</Link>
                                             <Link to="/register" className="navbar__mobile-auth-btn navbar__mobile-auth-btn--fill" onClick={close}>Register</Link>
                                         </>
